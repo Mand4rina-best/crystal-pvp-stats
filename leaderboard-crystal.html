@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Crystal PvP LATAM - Estadisticas</title>
+    <title>Crystal: Deathmatch PvP - Estadisticas</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
       * {
@@ -272,7 +273,8 @@
       .lbcard,
       .info-card,
       .rule-card,
-      .rank-step,
+      .podium-card,
+      .status-card,
       .hero-panel {
         background: var(--panel);
         border: 1px solid var(--line);
@@ -786,6 +788,163 @@
         margin-bottom: 26px;
       }
 
+      .status-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+
+      .status-title {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+
+      .status-name {
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      .online-count {
+        min-width: 128px;
+        min-height: 74px;
+        border-radius: var(--radius);
+        background: rgba(20, 184, 166, 0.11);
+        display: grid;
+        place-items: center;
+        color: #99f6e4;
+        text-align: center;
+        padding: 10px;
+      }
+
+      .online-count strong {
+        display: block;
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .online-count span {
+        display: block;
+        margin-top: 5px;
+        color: #ccfbf1;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .podium {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: end;
+        gap: 14px;
+        margin-bottom: 26px;
+      }
+
+      .podium-card {
+        min-height: 272px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .podium-card.first {
+        min-height: 318px;
+        border-color: rgba(245, 158, 11, 0.48);
+        background:
+          linear-gradient(180deg, rgba(245, 158, 11, 0.12), transparent 38%),
+          var(--panel);
+      }
+
+      .podium-card.second {
+        min-height: 288px;
+      }
+
+      .podium-medal {
+        width: fit-content;
+        border-radius: var(--radius);
+        background: var(--panel-2);
+        color: #dbeafe;
+        padding: 8px 10px;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .podium-avatar {
+        width: 76px;
+        height: 76px;
+        border: 1px solid rgba(165, 180, 252, 0.35);
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, var(--indigo), var(--cyan));
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        color: #e0f2fe;
+      }
+
+      .podium-card.first .podium-avatar {
+        width: 92px;
+        height: 92px;
+      }
+
+      .podium-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .podium-avatar svg {
+        width: 34px;
+        height: 34px;
+      }
+
+      .podium-name {
+        font-size: 22px;
+        font-weight: 900;
+        overflow-wrap: anywhere;
+      }
+
+      .podium-card.first .podium-name {
+        font-size: 26px;
+      }
+
+      .podium-sub {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .podium-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: auto;
+      }
+
+      .podium-stat {
+        border-radius: var(--radius);
+        background: var(--panel-2);
+        padding: 10px;
+      }
+
+      .podium-stat strong {
+        display: block;
+        color: #a5b4fc;
+        font-size: 18px;
+      }
+
+      .podium-stat span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+      }
+
       .featured-player-card {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
@@ -1088,37 +1247,6 @@
         animation-delay: 0.2s;
       }
 
-      .rank-road {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .rank-step {
-        min-height: 122px;
-        padding: 16px;
-      }
-
-      .rank-step strong {
-        display: block;
-        font-size: 16px;
-      }
-
-      .rank-step span {
-        display: block;
-        margin-top: 8px;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.55;
-      }
-
-      .footer {
-        border-top: 1px solid var(--line);
-        padding: 28px 0 40px;
-        color: var(--muted);
-        font-size: 13px;
-      }
-
       @keyframes loading {
         0%,
         80%,
@@ -1141,8 +1269,12 @@
         }
 
         .info-grid,
-        .rank-road {
+        .podium {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .podium-card.first {
+          order: -1;
         }
       }
 
@@ -1168,11 +1300,15 @@
 
         .quick-stats,
         .side-panels,
+        .podium,
         .info-grid,
-        .rank-road,
         .rules-grid,
         .server-meta,
         .mini-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .status-card {
           grid-template-columns: 1fr;
         }
 
@@ -1211,14 +1347,13 @@
             </svg>
           </div>
           <div>
-            <div class="brand-title">Crystal PvP LATAM</div>
+            <div class="brand-title">Crystal: Deathmatch PvP</div>
             <div class="brand-sub">Stats, ranks y leaderboards</div>
           </div>
         </a>
         <div class="nav">
           <a href="#info">Info</a>
           <a href="#reglas">Reglas</a>
-          <a href="#rangos">Rangos</a>
           <a href="#estadisticas">Estadisticas</a>
           <button type="button" onclick="enterStats()">Entrar</button>
         </div>
@@ -1253,16 +1388,16 @@
           </div>
           <div class="quick-stats" aria-label="Resumen del servidor">
             <div class="quick-stat">
+              <div id="onlinePlayers" class="quick-value">--</div>
+              <div class="quick-label">Jugadores online</div>
+            </div>
+            <div class="quick-stat">
               <div id="totalPlayers" class="quick-value">--</div>
               <div class="quick-label">Jugadores registrados</div>
             </div>
             <div class="quick-stat">
               <div id="totalKills" class="quick-value">--</div>
               <div class="quick-label">Kills totales cargadas</div>
-            </div>
-            <div class="quick-stat">
-              <div id="bestKd" class="quick-value">--</div>
-              <div class="quick-label">Mejor K/D actual</div>
             </div>
           </div>
         </div>
@@ -1272,9 +1407,9 @@
             <div class="crystal"></div>
           </div>
           <div class="floating-card">
-            <h2>Competencia limpia, duelos intensos y ranking visible.</h2>
+            <h2>Deathmatch PvP, duelos rapidos y ranking visible.</h2>
             <p>
-              La tabla se actualiza automaticamente. Cuando conectes tu JSON publico, esta pagina mostrara los datos reales del servidor.
+              Consulta online, kills, EXP y rendimiento sin entrar al juego.
             </p>
             <div class="mini-grid">
               <div class="mini">K/D</div>
@@ -1426,30 +1561,6 @@
       </div>
     </section>
 
-    <section id="rangos" class="page-section">
-      <div class="wrap">
-        <div class="section-heading">
-          <h2 class="section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 20V10" />
-              <path d="M18 20V4" />
-              <path d="M6 20v-4" />
-            </svg>
-            Camino de rangos
-          </h2>
-          <p class="section-note">
-            Una guia simple para que los jugadores entiendan como se lee el progreso dentro de la tabla.
-          </p>
-        </div>
-        <div class="rank-road">
-          <div class="rank-step"><strong>Bronze</strong><span>Inicio competitivo. Ideal para aprender timing, posicionamiento y control de cristales.</span></div>
-          <div class="rank-step"><strong>Silver</strong><span>Jugadores con constancia. Ya se nota mejor decision en peleas largas y trades.</span></div>
-          <div class="rank-step"><strong>Gold</strong><span>Rango fuerte. Buen manejo de recursos, presion y lectura del rival.</span></div>
-          <div class="rank-step"><strong>Diamond e Inmortal</strong><span>La cima del servidor. K/D alto, actividad y rendimiento sostenido.</span></div>
-        </div>
-      </div>
-    </section>
-
     <section id="estadisticas" class="stats-area">
       <div class="wrap stats-shell">
         <header class="stats-header">
@@ -1463,7 +1574,7 @@
             </div>
             <div>
               <h2 class="stats-title">Panel de estadisticas</h2>
-              <div class="sub">Leaderboard del servidor Crystal PvP LATAM</div>
+              <div class="sub">Leaderboard de Crystal: Deathmatch PvP</div>
             </div>
           </div>
           <div class="pill"><span class="pulse"></span><span id="updated">Cargando datos...</span></div>
@@ -1510,51 +1621,25 @@
           <div id="playerStats" class="stats-grid"></div>
         </div>
 
-        <div class="side-panels">
-          <aside id="topRank" class="side-card">
-            <div class="featured-player-card">
-              <div id="rankAvatar" class="featured-avatar" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z" />
-                </svg>
-              </div>
-              <div class="featured-main">
-                <div class="rank-name">Top Rank / Stage / Tier</div>
-                <div id="rankPlayer" class="rank-player">Cargando...</div>
-                <div id="rankBadges" class="rank-badges"></div>
-                <div id="rankExtraStats" class="featured-stats"></div>
-              </div>
+        <div class="status-card">
+          <div>
+            <div class="status-title">Estado del servidor</div>
+            <div class="status-name">Crystal: Deathmatch PvP</div>
+            <p class="server-copy">IP 45.235.98.194:27413 · Discord discord.gg/pJmQDVGsaJ</p>
+          </div>
+          <div class="online-count">
+            <div>
+              <strong id="onlinePlayersPanel">--</strong>
+              <span>online ahora</span>
             </div>
-          </aside>
-
-          <aside class="side-card">
-            <div class="side-head">
-              <div class="icon teal" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14" />
-                  <path d="M12 5v14" />
-                  <path d="m16 8 3 4-3 4" />
-                  <path d="m8 8-3 4 3 4" />
-                </svg>
-              </div>
-              <div>
-                <div class="rank-name">Datos del servidor</div>
-                <div class="rank-player">Crystal PvP LATAM</div>
-              </div>
-            </div>
-            <p class="server-copy">Servidor PvP latinoamericano pensado para diversion, duelos intensos y enfrentamientos entre amigos.</p>
-            <div class="server-links">
-              <a class="server-link" href="https://discord.gg/pJmQDVGsaJ" target="_blank" rel="noopener">
-                <span>Discord</span>
-                <strong>discord.gg/pJmQDVGsaJ</strong>
-              </a>
-              <div class="server-link">
-                <span>IP del servidor</span>
-                <strong>45.235.98.194:27413</strong>
-              </div>
-            </div>
-          </aside>
+          </div>
         </div>
+
+        <section class="podium" aria-label="Top 3 jugadores">
+          <article id="podiumSecond" class="podium-card second"></article>
+          <article id="podiumFirst" class="podium-card first"></article>
+          <article id="podiumThird" class="podium-card third"></article>
+        </section>
 
         <section>
           <div class="section-heading">
@@ -1630,14 +1715,9 @@
       </div>
     </section>
 
-    <footer class="footer">
-      <div class="wrap">
-        Crystal PvP LATAM - Pagina preparada para conectar el JSON desde MineHost usando el puente /stats.json.
-      </div>
-    </footer>
-
     <script>
       const JSON_URL = "stats.json";
+      const STATUS_URL = "status.json";
       const USE_DEMO_WHEN_JSON_FAILS = true;
 
       const demoPlayers = [
@@ -1666,6 +1746,7 @@
       ];
 
       let players = [];
+      let onlinePlayers = null;
 
       function enterStats() {
         document.getElementById("estadisticas").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1718,6 +1799,48 @@
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z" />
           </svg>
         `;
+      }
+
+      function setOnlineCount(value) {
+        const label = Number.isFinite(value) ? String(value) : "--";
+        document.getElementById("onlinePlayers").textContent = label;
+        document.getElementById("onlinePlayersPanel").textContent = label;
+      }
+
+      function extractOnlineCount(payload) {
+        const status = payload && payload.status !== undefined ? payload.status : payload;
+
+        if (typeof status === "number") return status;
+        if (Array.isArray(status)) return status.length;
+        if (!status || typeof status !== "object") return null;
+
+        const directKeys = [
+          "online",
+          "Online",
+          "players",
+          "Players",
+          "playerCount",
+          "PlayerCount",
+          "onlinePlayers",
+          "OnlinePlayers",
+          "currentPlayers",
+          "CurrentPlayers",
+          "clients",
+          "Clients"
+        ];
+
+        for (const key of directKeys) {
+          const value = status[key];
+          if (typeof value === "number") return value;
+          if (Array.isArray(value)) return value.length;
+          if (value && typeof value === "object") return Object.keys(value).length;
+        }
+
+        for (const value of Object.values(status)) {
+          if (Array.isArray(value)) return value.length;
+        }
+
+        return null;
       }
 
       function normalizePlayer(player, idFromObject) {
@@ -1809,11 +1932,45 @@
 
       function renderSummary() {
         const totalKills = players.reduce((sum, player) => sum + player.kills, 0);
-        const best = [...players].sort((a, b) => getKd(b) - getKd(a))[0];
 
         document.getElementById("totalPlayers").textContent = players.length ? formatCompact(players.length) : "--";
         document.getElementById("totalKills").textContent = players.length ? formatCompact(totalKills) : "--";
-        document.getElementById("bestKd").textContent = best ? getKd(best).toFixed(2) : "--";
+        setOnlineCount(onlinePlayers);
+      }
+
+      function renderPodiumCard(elementId, player, place) {
+        const card = document.getElementById(elementId);
+
+        if (!player) {
+          card.innerHTML = '<div class="empty">Sin datos</div>';
+          return;
+        }
+
+        const avatarUrl = getAvatarUrl(player);
+        const avatar = avatarUrl
+          ? `<img src="${escapeHtml(avatarUrl)}" alt="" referrerpolicy="no-referrer" onerror="this.parentElement.innerHTML = fallbackAvatarSvg()">`
+          : fallbackAvatarSvg();
+
+        card.innerHTML = `
+          <div class="podium-medal">Top ${place}</div>
+          <div class="podium-avatar">${avatar}</div>
+          <div>
+            <div class="podium-name">${escapeHtml(player.name)}</div>
+            <div class="podium-sub">${escapeHtml(player.rank)} · Tier ${escapeHtml(player.tier)} · Stage ${escapeHtml(player.stage)}</div>
+          </div>
+          <div class="podium-stats">
+            <div class="podium-stat"><strong>${escapeHtml(player.points)}</strong><span>EXP</span></div>
+            <div class="podium-stat"><strong>${escapeHtml(player.kills)}</strong><span>Kills</span></div>
+            <div class="podium-stat"><strong>${getKd(player).toFixed(2)}</strong><span>K/D</span></div>
+            <div class="podium-stat"><strong>${formatTime(player.playSeconds)}</strong><span>Playtime</span></div>
+          </div>
+        `;
+      }
+
+      function renderPodium(topRank) {
+        renderPodiumCard("podiumSecond", topRank[1], 2);
+        renderPodiumCard("podiumFirst", topRank[0], 1);
+        renderPodiumCard("podiumThird", topRank[2], 3);
       }
 
       function renderLeaderboards() {
@@ -1827,41 +1984,8 @@
         document.getElementById("killRows").innerHTML = makeRows(topKills, (player) => player.kills);
         document.getElementById("deathRows").innerHTML = makeRows(topDeaths, (player) => player.deaths);
         document.getElementById("kdRows").innerHTML = makeRows(topKd, (player) => getKd(player).toFixed(2));
-        renderTopRank(topRank[0]);
+        renderPodium(topRank);
         renderSummary();
-      }
-
-      function renderTopRank(player) {
-        if (!player) {
-          document.getElementById("rankPlayer").textContent = "Sin datos";
-          document.getElementById("rankBadges").innerHTML = "";
-          document.getElementById("rankExtraStats").innerHTML = "";
-          document.getElementById("rankAvatar").innerHTML = fallbackAvatarSvg();
-          return;
-        }
-
-        document.getElementById("rankPlayer").textContent = player.name;
-        const avatarUrl = getAvatarUrl(player);
-        document.getElementById("rankAvatar").innerHTML = avatarUrl
-          ? `<img src="${escapeHtml(avatarUrl)}" alt="">`
-          : fallbackAvatarSvg();
-        document.getElementById("rankBadges").innerHTML = `
-          <span class="badge">Rank: <strong>${escapeHtml(player.rank)}</strong></span>
-          <span class="badge">Tier: <strong>${escapeHtml(player.tier)}</strong></span>
-          <span class="badge">Stage: <strong>${escapeHtml(player.stage)}</strong></span>
-          <span class="badge">EXP: <strong>${escapeHtml(player.points)}</strong></span>
-          ${player.profileUrl ? `<a class="badge" href="${escapeHtml(player.profileUrl)}" target="_blank" rel="noopener">Perfil Steam</a>` : ""}
-        `;
-        document.getElementById("rankExtraStats").innerHTML = `
-          <div class="featured-stat"><strong>${escapeHtml(player.kills)}</strong><span>Kills</span></div>
-          <div class="featured-stat"><strong>${escapeHtml(player.deaths)}</strong><span>Muertes</span></div>
-          <div class="featured-stat"><strong>${getKd(player).toFixed(2)}</strong><span>K/D</span></div>
-          <div class="featured-stat"><strong>${formatTime(player.playSeconds)}</strong><span>Playtime</span></div>
-          <div class="featured-stat"><strong>${escapeHtml(player.assists)}</strong><span>Asistencias</span></div>
-          <div class="featured-stat"><strong>${escapeHtml(player.bestStreak)}</strong><span>Best streak</span></div>
-          <div class="featured-stat"><strong>${getAccuracy(player).toFixed(0)}%</strong><span>Precision</span></div>
-          <div class="featured-stat"><strong>${escapeHtml(player.id || "-")}</strong><span>Steam ID</span></div>
-        `;
       }
 
       function renderPlayer(player) {
@@ -1942,6 +2066,19 @@
         document.getElementById("updated").textContent = "Modo demo activo";
       }
 
+      async function loadStatus() {
+        try {
+          const response = await fetch(`${STATUS_URL}?t=${Date.now()}`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const payload = await response.json();
+          onlinePlayers = extractOnlineCount(payload);
+          setOnlineCount(onlinePlayers);
+        } catch (error) {
+          console.error(error);
+          setOnlineCount(null);
+        }
+      }
+
       async function loadStats() {
         try {
           const response = await fetch(`${JSON_URL}?t=${Date.now()}`);
@@ -1966,9 +2103,6 @@
           for (const id of ["playtimeRows", "killRows", "deathRows", "kdRows"]) {
             document.getElementById(id).innerHTML = '<div class="error">Revisa el link del JSON o CORS</div>';
           }
-
-          document.getElementById("rankPlayer").textContent = "Error cargando datos";
-          document.getElementById("rankBadges").innerHTML = "";
         }
       }
 
@@ -1997,7 +2131,9 @@
         if (!event.target.closest(".searchblock")) hideSuggestions();
       });
 
+      loadStatus();
       loadStats();
+      setInterval(loadStatus, 30000);
       setInterval(loadStats, 60000);
     </script>
   </body>
