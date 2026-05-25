@@ -80,18 +80,53 @@ function normalizePlayersObject(raw) {
   return raw;
 }
 
+function toSteamId64(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+
+  const onlyDigits = text.match(/\d{15,20}/)?.[0];
+  if (onlyDigits) return onlyDigits;
+
+  const steam3 = text.match(/\[U:1:(\d+)\]/i);
+  if (steam3) return String(76561197960265728n + BigInt(steam3[1]));
+
+  const steam2 = text.match(/STEAM_[0-5]:(\d):(\d+)/i);
+  if (steam2) {
+    return String(76561197960265728n + BigInt(steam2[1]) + BigInt(steam2[2]) * 2n);
+  }
+
+  const accountId = text.match(/^\d{1,12}$/)?.[0];
+  if (accountId) return String(76561197960265728n + BigInt(accountId));
+
+  return "";
+}
+
+function getPlayerSteamId(player, idFromObject = "") {
+  return toSteamId64(
+    player?.steam_id ||
+    player?.steamId ||
+    player?.SteamID ||
+    player?.SteamId ||
+    player?.ID ||
+    player?.Id ||
+    player?.UserId ||
+    player?.UserID ||
+    idFromObject
+  );
+}
+
 function getSteamIds(players) {
   const source = normalizePlayersObject(players);
 
   if (Array.isArray(source)) {
     return source
-      .map((player) => player.steam_id || player.steamId || player.SteamID || player.SteamId || player.ID || player.Id)
+      .map((player) => getPlayerSteamId(player))
       .filter(Boolean)
       .map(String);
   }
 
   return Object.entries(source || {})
-    .map(([id, player]) => player.steam_id || player.steamId || player.SteamID || player.SteamId || id)
+    .map(([id, player]) => getPlayerSteamId(player, id))
     .filter(Boolean)
     .map(String);
 }
@@ -130,22 +165,26 @@ async function addSteamProfiles(raw) {
 
   if (Array.isArray(source)) {
     source.forEach((player) => {
-      const id = String(player.steam_id || player.steamId || player.SteamID || player.SteamId || player.ID || player.Id || "");
+      const id = getPlayerSteamId(player);
       const profile = profiles.get(id);
       if (!profile) return;
 
+      player.steam_id = id;
       player.avatar = profile.avatarfull || profile.avatarmedium || profile.avatar;
+      player.avatarMedium = profile.avatarmedium || profile.avatar;
       player.profileUrl = profile.profileurl;
     });
     return raw;
   }
 
   for (const [id, player] of Object.entries(source || {})) {
-    const steamId = String(player.steam_id || player.steamId || player.SteamID || player.SteamId || id);
+    const steamId = getPlayerSteamId(player, id);
     const profile = profiles.get(steamId);
     if (!profile) continue;
 
+    player.steam_id = steamId;
     player.avatar = profile.avatarfull || profile.avatarmedium || profile.avatar;
+    player.avatarMedium = profile.avatarmedium || profile.avatar;
     player.profileUrl = profile.profileurl;
   }
 
