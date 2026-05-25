@@ -1747,16 +1747,7 @@
     <script>
       const JSON_URL = "stats.json";
       const STATUS_URL = "status.json";
-      const USE_DEMO_WHEN_JSON_FAILS = true;
-
-      const demoPlayers = [
-        { steam_id: "76561199000000001", nickname: "ArielPvP", kills: 320, deaths: 94, assists: 48, points: 318, total_play_seconds: 64240, tier: "III", stage: "Peak", BestStreak: 19, ShotsFired: 840, ShotsHit: 522 },
-        { steam_id: "76561199000000002", nickname: "Crystalized", kills: 286, deaths: 120, assists: 35, points: 274, total_play_seconds: 58900, tier: "II", stage: "A", BestStreak: 14, ShotsFired: 765, ShotsHit: 451 },
-        { steam_id: "76561199000000003", nickname: "TotemBreaker", kills: 241, deaths: 88, assists: 61, points: 246, total_play_seconds: 45520, tier: "I", stage: "B", BestStreak: 17, ShotsFired: 690, ShotsHit: 437 },
-        { steam_id: "76561199000000004", nickname: "LatamDuelist", kills: 210, deaths: 135, assists: 24, points: 188, total_play_seconds: 72210, tier: "II", stage: "A", BestStreak: 9, ShotsFired: 580, ShotsHit: 302 },
-        { steam_id: "76561199000000005", nickname: "AnchorMain", kills: 189, deaths: 176, assists: 72, points: 165, total_play_seconds: 31800, tier: "I", stage: "C", BestStreak: 8, ShotsFired: 512, ShotsHit: 271 },
-        { steam_id: "76561199000000006", nickname: "ObsidianRush", kills: 164, deaths: 92, assists: 19, points: 152, total_play_seconds: 28120, tier: "III", stage: "B", BestStreak: 11, ShotsFired: 478, ShotsHit: 260 }
-      ];
+      const USE_DEMO_WHEN_JSON_FAILS = false;
 
       const ranks = [
         { name: "Bronze I", min: 0 },
@@ -2094,12 +2085,6 @@
         document.getElementById("suggestions").classList.remove("show");
       }
 
-      function useDemoData() {
-        players = normalizePayload(demoPlayers);
-        renderLeaderboards();
-        document.getElementById("updated").textContent = "Modo demo activo";
-      }
-
       async function loadStatus() {
         try {
           const response = await fetch(`${STATUS_URL}?t=${Date.now()}`);
@@ -2126,11 +2111,6 @@
           document.getElementById("updated").textContent = `Actualizado ${updatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
         } catch (error) {
           console.error(error);
-
-          if (USE_DEMO_WHEN_JSON_FAILS) {
-            useDemoData();
-            return;
-          }
 
           document.getElementById("updated").textContent = "No se pudo cargar el JSON";
 
