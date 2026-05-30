@@ -1110,84 +1110,9 @@
       </section>
     </main>
     <script>
-      const TEAMS_JSON_URLS = ["teams.json", "CrystalTeams.json", "teams-crystal.json"];
+      const TEAMS_JSON_URLS = ["teams.json", "CrystalTeams.json"];
       const PLAYERS_JSON_URLS = ["stats.json", "CrystalPvPData.json"];
-      const fallbackTeamData = [
-        {
-          name: "CRYSTΛL",
-          short: "C",
-          color: "#99f6e4",
-          members: 12,
-          wins: 128,
-          defeats: 38,
-          elo: 1840,
-          rank: "Inmortal Peak",
-          gp: 166,
-          info: "Team principal de CRYSTΛL: PVP. Enfocado en duelos rapidos, control de zona y ranking competitivo."
-        },
-        {
-          name: "Night Raid",
-          short: "N",
-          color: "#a5b4fc",
-          members: 9,
-          wins: 119,
-          defeats: 47,
-          elo: 1715,
-          rank: "Tryhard Crystal",
-          gp: 166,
-          info: "Equipo ofensivo con buen control de rondas largas y duelos de distancia media."
-        },
-        {
-          name: "Zona Sur",
-          short: "Z",
-          color: "#67e8f9",
-          members: 8,
-          wins: 97,
-          defeats: 58,
-          elo: 1642,
-          rank: "Tryhard Crystal",
-          gp: 155,
-          info: "Team competitivo enfocado en rotaciones rapidas y presion constante."
-        },
-        {
-          name: "Delta PvP",
-          short: "D",
-          color: "#fca5a5",
-          members: 7,
-          wins: 91,
-          defeats: 76,
-          elo: 1530,
-          rank: "Decent Crystal",
-          gp: 167,
-          info: "Roster flexible con buen rendimiento en partidas cerradas."
-        },
-        {
-          name: "Buenos Aires",
-          short: "B",
-          color: "#fde68a",
-          members: 10,
-          wins: 104,
-          defeats: 69,
-          elo: 1498,
-          rank: "Decent Crystal",
-          gp: 173,
-          info: "Equipo activo del servidor con enfoque en constancia y progresion."
-        },
-        {
-          name: "Furia Norte",
-          short: "F",
-          color: "#fda4af",
-          members: 6,
-          wins: 73,
-          defeats: 88,
-          elo: 1210,
-          rank: "Novice Crystal",
-          gp: 161,
-          info: "Team nuevo en subida, con muchas rondas jugadas y margen para escalar."
-        }
-      ];
-
-      let teamData = fallbackTeamData;
+      let teamData = [];
 
       const wdRatio = team => team.defeats === 0 ? team.wins : team.wins / team.defeats;
       const byId = id => document.getElementById(id);
@@ -1379,7 +1304,7 @@
           return;
         }
 
-        teamData = fallbackTeamData;
+        teamData = [];
       }
 
       function rankClass(index) {
@@ -1400,6 +1325,32 @@
       }
 
       function renderSelectedTeam(team) {
+        if (!team) {
+          byId("selectedTeamAvatar").textContent = "-";
+          byId("selectedTeamAvatar").style.color = "#99f6e4";
+          byId("selectedTeamName").textContent = "Sin datos";
+          byId("selectedTeamName").style.color = "#e5e7eb";
+          byId("selectedTeamRank").textContent = "Esperando JSON";
+          byId("selectedTeamInfo").textContent = "Todavia no se pudieron cargar los teams reales del servidor.";
+
+          byId("selectedTeamStats").innerHTML = [
+            ["MEMBERS", "--"],
+            ["WINS", "--"],
+            ["DEFEATS", "--"],
+            ["W/D RATIO", "--"],
+            ["ELO", "--"],
+            ["RANK", "--"],
+            ["GP", "--"],
+            ["WIN RATE", "--"]
+          ].map(([label, value]) => `
+            <div class="team-data-item">
+              <span>${label}</span>
+              <strong>${value}</strong>
+            </div>
+          `).join("");
+          return;
+        }
+
         byId("selectedTeamAvatar").textContent = team.short;
         byId("selectedTeamAvatar").style.color = team.color;
         byId("selectedTeamName").textContent = team.name;
@@ -1458,6 +1409,12 @@
 
       function setTeamByName(name) {
         const selected = teamData.find(team => team.name.toLowerCase() === name.toLowerCase()) || teamData[0];
+
+        if (!selected) {
+          renderSelectedTeam(null);
+          return;
+        }
+
         byId("teamSelect").value = selected.name;
         renderSelectedTeam(selected);
       }
@@ -1538,7 +1495,7 @@
         });
 
         byId("registeredTeams").textContent = teamData.length;
-        renderSelectedTeam(teamData[0]);
+        renderSelectedTeam(teamData[0] || null);
         renderTeamTable();
         renderLeaderboards();
       }
