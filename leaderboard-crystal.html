@@ -87,9 +87,9 @@
 
       .topbar-inner {
         min-height: 72px;
-        display: flex;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
         gap: 18px;
       }
 
@@ -138,12 +138,16 @@
       .nav {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 8px;
       }
 
       .nav a,
       .nav button {
         min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border: 1px solid transparent;
         border-radius: var(--radius);
         background: transparent;
@@ -1390,8 +1394,8 @@
     <main id="inicio" class="wrap">
       <section class="hero">
         <div>
-          <div class="eyebrow"><span class="pulse"></span> Servidor Crystal PvP activo</div>
-          <h1>Crystal PvP Stats</h1>
+          <div class="eyebrow"><span class="pulse"></span> Servidor Activo.</div>
+          <h1>CRYST&Lambda;L: DEATHM&Lambda;TCH</h1>
           <p class="hero-copy">
             Mira los mejores jugadores del servidor, busca tu perfil por nickname o Steam ID y compara kills,
             muertes, K/D, tiempo jugado, EXP, rank, tier y stage desde una sola pagina.
@@ -1404,6 +1408,14 @@
               </svg>
               Entrar a estadisticas
             </button>
+            <a class="button" href="externo.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2 3 7l9 5 9-5-9-5Z" />
+                <path d="M3 17l9 5 9-5" />
+                <path d="M3 12l9 5 9-5" />
+              </svg>
+              Entrar Crystal: PvP T.
+            </a>
             <a class="ghost-button" href="https://discord.gg/pJmQDVGsaJ" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M8 12h8" />

@@ -12,6 +12,8 @@ let statsCache = null;
 let statsCacheTime = 0;
 let statusCache = null;
 let statusCacheTime = 0;
+let teamsCache = null;
+let teamsCacheTime = 0;
 const cacheMs = Number(process.env.STATS_CACHE_SECONDS || 10) * 1000;
 
 app.use(cors());
@@ -41,6 +43,10 @@ function getRemoteStatsPath() {
 
 function getRemoteStatusPath() {
   return env("SFTP_STATUS_PATH") || "/.config/EXILED/Configs/CrystalStatus.json";
+}
+
+function getRemoteTeamsPath() {
+  return env("SFTP_TEAMS_PATH") || "/.config/EXILED/Configs/CrystalTeams.json";
 }
 
 async function readJsonFromSftp(remotePath) {
@@ -211,6 +217,16 @@ async function readStatus() {
   return readJsonFromSftp(getRemoteStatusPath());
 }
 
+async function readTeams() {
+  const sourceUrl = env("TEAMS_SOURCE_URL");
+
+  if (sourceUrl) {
+    return readJsonFromUrl(sourceUrl);
+  }
+
+  return readJsonFromSftp(getRemoteTeamsPath());
+}
+
 app.get("/stats.json", async (req, res) => {
   try {
     const now = Date.now();
@@ -251,7 +267,28 @@ app.get("/status.json", async (req, res) => {
   }
 });
 
+app.get("/teams.json", async (req, res) => {
+  try {
+    const now = Date.now();
+
+    if (!teamsCache || now - teamsCacheTime > cacheMs) {
+      teamsCache = await readTeams();
+      teamsCacheTime = now;
+    }
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      updatedAt: new Date(teamsCacheTime).toISOString(),
+      teams: teamsCache
+    });
+  } catch (error) {
+    console.error("No pude leer CrystalTeams.json desde Minehost:", error);
+    res.status(500).json({ error: "No pude leer los teams desde Minehost" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Stats API lista: http://localhost:${port}/stats.json`);
   console.log(`Status API lista: http://localhost:${port}/status.json`);
+  console.log(`Teams API lista: http://localhost:${port}/teams.json`);
 });
