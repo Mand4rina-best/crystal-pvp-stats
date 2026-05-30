@@ -1110,8 +1110,8 @@
       </section>
     </main>
     <script>
-      const TEAMS_JSON_URLS = ["teams.json", "CrystalTeams.json"];
-      const PLAYERS_JSON_URLS = ["stats.json", "CrystalPvPData.json"];
+      const TEAMS_JSON_URLS = ["pvp/teams.json", "teams.json", "CrystalTeams.json"];
+      const PLAYERS_JSON_URLS = ["pvp/stats.json", "stats.json", "CrystalPvPData.json"];
       let teamData = [];
 
       const wdRatio = team => team.defeats === 0 ? team.wins : team.wins / team.defeats;

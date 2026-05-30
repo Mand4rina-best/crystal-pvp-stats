@@ -14,6 +14,10 @@ let statusCache = null;
 let statusCacheTime = 0;
 let teamsCache = null;
 let teamsCacheTime = 0;
+let pvpStatsCache = null;
+let pvpStatsCacheTime = 0;
+let pvpTeamsCache = null;
+let pvpTeamsCacheTime = 0;
 const cacheMs = Number(process.env.STATS_CACHE_SECONDS || 10) * 1000;
 
 app.use(cors());
@@ -27,37 +31,41 @@ function env(name) {
   return process.env[name]?.trim();
 }
 
-function requiredEnv(name) {
-  const value = env(name);
+function prefixedEnv(prefix, name) {
+  return env(`${prefix}${name}`) || env(name);
+}
+
+function requiredEnv(name, prefix = "") {
+  const value = prefixedEnv(prefix, name);
 
   if (!value) {
-    throw new Error(`Falta configurar ${name} en el archivo .env`);
+    throw new Error(`Falta configurar ${prefix}${name} en el archivo .env`);
   }
 
   return value;
 }
 
-function getRemoteStatsPath() {
-  return env("SFTP_RANK_PATH") || env("SFTP_STATS_PATH") || "/.config/EXILED/Configs/NoAimRankData.json";
+function getRemoteStatsPath(prefix = "", fallback = "/.config/EXILED/Configs/NoAimRankData.json") {
+  return prefixedEnv(prefix, "SFTP_RANK_PATH") || prefixedEnv(prefix, "SFTP_STATS_PATH") || fallback;
 }
 
 function getRemoteStatusPath() {
   return env("SFTP_STATUS_PATH") || "/.config/EXILED/Configs/CrystalStatus.json";
 }
 
-function getRemoteTeamsPath() {
-  return env("SFTP_TEAMS_PATH") || "/.config/EXILED/Configs/CrystalTeams.json";
+function getRemoteTeamsPath(prefix = "") {
+  return prefixedEnv(prefix, "SFTP_TEAMS_PATH") || "/.config/EXILED/Configs/CrystalTeams.json";
 }
 
-async function readJsonFromSftp(remotePath) {
+async function readJsonFromSftp(remotePath, prefix = "") {
   const sftp = new SftpClient();
 
   try {
     await sftp.connect({
-      host: requiredEnv("SFTP_HOST"),
-      port: Number(env("SFTP_PORT") || 22),
-      username: requiredEnv("SFTP_USER"),
-      password: requiredEnv("SFTP_PASSWORD")
+      host: requiredEnv("SFTP_HOST", prefix),
+      port: Number(prefixedEnv(prefix, "SFTP_PORT") || 22),
+      username: requiredEnv("SFTP_USER", prefix),
+      password: requiredEnv("SFTP_PASSWORD", prefix)
     });
 
     const buffer = await sftp.get(remotePath);
@@ -197,14 +205,14 @@ async function addSteamProfiles(raw) {
   return raw;
 }
 
-async function readStats() {
-  const sourceUrl = env("STATS_SOURCE_URL");
+async function readStats(prefix = "", fallbackPath = "/.config/EXILED/Configs/NoAimRankData.json") {
+  const sourceUrl = prefixedEnv(prefix, "STATS_SOURCE_URL");
 
   if (sourceUrl) {
     return readJsonFromUrl(sourceUrl);
   }
 
-  return readJsonFromSftp(getRemoteStatsPath());
+  return readJsonFromSftp(getRemoteStatsPath(prefix, fallbackPath), prefix);
 }
 
 async function readStatus() {
@@ -217,14 +225,14 @@ async function readStatus() {
   return readJsonFromSftp(getRemoteStatusPath());
 }
 
-async function readTeams() {
-  const sourceUrl = env("TEAMS_SOURCE_URL");
+async function readTeams(prefix = "") {
+  const sourceUrl = prefixedEnv(prefix, "TEAMS_SOURCE_URL");
 
   if (sourceUrl) {
     return readJsonFromUrl(sourceUrl);
   }
 
-  return readJsonFromSftp(getRemoteTeamsPath());
+  return readJsonFromSftp(getRemoteTeamsPath(prefix), prefix);
 }
 
 app.get("/stats.json", async (req, res) => {
@@ -287,8 +295,50 @@ app.get("/teams.json", async (req, res) => {
   }
 });
 
+app.get("/pvp/stats.json", async (req, res) => {
+  try {
+    const now = Date.now();
+
+    if (!pvpStatsCache || now - pvpStatsCacheTime > cacheMs) {
+      pvpStatsCache = await addSteamProfiles(await readStats("PVP_", "/.config/EXILED/Configs/CrystalPvPData.json"));
+      pvpStatsCacheTime = now;
+    }
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      updatedAt: new Date(pvpStatsCacheTime).toISOString(),
+      players: pvpStatsCache
+    });
+  } catch (error) {
+    console.error("No pude leer CrystalPvPData.json desde Minehost:", error);
+    res.status(500).json({ error: "No pude leer las stats PVP T desde Minehost" });
+  }
+});
+
+app.get("/pvp/teams.json", async (req, res) => {
+  try {
+    const now = Date.now();
+
+    if (!pvpTeamsCache || now - pvpTeamsCacheTime > cacheMs) {
+      pvpTeamsCache = await readTeams("PVP_");
+      pvpTeamsCacheTime = now;
+    }
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      updatedAt: new Date(pvpTeamsCacheTime).toISOString(),
+      teams: pvpTeamsCache
+    });
+  } catch (error) {
+    console.error("No pude leer CrystalTeams.json de PVP T desde Minehost:", error);
+    res.status(500).json({ error: "No pude leer los teams PVP T desde Minehost" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Stats API lista: http://localhost:${port}/stats.json`);
   console.log(`Status API lista: http://localhost:${port}/status.json`);
   console.log(`Teams API lista: http://localhost:${port}/teams.json`);
+  console.log(`PVP T Stats API lista: http://localhost:${port}/pvp/stats.json`);
+  console.log(`PVP T Teams API lista: http://localhost:${port}/pvp/teams.json`);
 });
