@@ -795,6 +795,57 @@
         font-weight: 900;
       }
 
+      .team-pagination {
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-top: 1px solid var(--line);
+        padding: 12px;
+        background: rgba(255,255,255,.018);
+      }
+
+      .team-page-button,
+      .team-page-pill {
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .team-page-button {
+        min-width: 96px;
+        border: 1px solid rgba(20,184,166,.34);
+        background: rgba(20,184,166,.1);
+        color: #ccfbf1;
+        cursor: pointer;
+      }
+
+      .team-page-button:hover:not(:disabled) {
+        background: rgba(20,184,166,.18);
+        border-color: rgba(20,184,166,.55);
+      }
+
+      .team-page-button:disabled {
+        border-color: rgba(41,49,61,.7);
+        background: rgba(255,255,255,.035);
+        color: #64748b;
+        cursor: not-allowed;
+      }
+
+      .team-page-pill {
+        min-width: 72px;
+        border: 1px solid rgba(99,102,241,.38);
+        background: rgba(99,102,241,.12);
+        color: #c4b5fd;
+        padding: 0 14px;
+      }
+
       .section-heading {
         display: flex;
         align-items: end;
@@ -1015,6 +1066,7 @@
             <div class="team-full-table">
               <div id="teamTable" class="team-full-grid"></div>
             </div>
+            <div id="teamPagination" class="team-pagination"></div>
           </article>
 
           <div class="team-leaderboards">
@@ -1113,6 +1165,8 @@
       const TEAMS_JSON_URLS = ["pvp/teams.json", "teams.json", "CrystalTeams.json"];
       const PLAYERS_JSON_URLS = ["pvp/stats.json", "stats.json", "CrystalPvPData.json"];
       let teamData = [];
+      let teamTablePage = 1;
+      const TEAM_TABLE_PAGE_SIZE = 10;
 
       const wdRatio = team => team.defeats === 0 ? team.wins : team.wins / team.defeats;
       const byId = id => document.getElementById(id);
@@ -1377,6 +1431,10 @@
 
       function renderTeamTable() {
         const sorted = [...teamData].sort((a, b) => b.elo - a.elo);
+        const totalPages = Math.max(1, Math.ceil(sorted.length / TEAM_TABLE_PAGE_SIZE));
+        teamTablePage = Math.min(Math.max(teamTablePage, 1), totalPages);
+        const start = (teamTablePage - 1) * TEAM_TABLE_PAGE_SIZE;
+        const pageTeams = sorted.slice(start, start + TEAM_TABLE_PAGE_SIZE);
 
         byId("teamTable").innerHTML = `
           <div class="team-full-head">#</div>
@@ -1387,8 +1445,8 @@
           <div class="team-full-head">ELO</div>
           <div class="team-full-head">RANK</div>
           <div class="team-full-head">GP</div>
-          ${sorted.map((team, index) => `
-            <div class="team-full-cell">#${index + 1}</div>
+          ${pageTeams.map((team, index) => `
+            <div class="team-full-cell">#${start + index + 1}</div>
             <div class="team-full-cell team-colored" style="color:${team.color}">${team.name}</div>
             <div class="team-full-cell">${team.members}</div>
             <div class="team-full-cell">${team.wins}</div>
@@ -1398,6 +1456,17 @@
             <div class="team-full-cell">${team.gp}</div>
           `).join("")}
         `;
+
+        byId("teamPagination").innerHTML = `
+          <button class="team-page-button" type="button" onclick="changeTeamTablePage(-1)" ${teamTablePage <= 1 ? "disabled" : ""}>Atras</button>
+          <span class="team-page-pill">${teamTablePage} / ${totalPages}</span>
+          <button class="team-page-button" type="button" onclick="changeTeamTablePage(1)" ${teamTablePage >= totalPages ? "disabled" : ""}>Siguiente</button>
+        `;
+      }
+
+      function changeTeamTablePage(delta) {
+        teamTablePage += delta;
+        renderTeamTable();
       }
 
       function renderLeaderboards() {
@@ -1470,6 +1539,7 @@
 
       async function initTeamPanel() {
         await loadTeamData();
+        teamTablePage = 1;
 
         byId("teamSelect").innerHTML = teamData
           .map(team => `<option value="${team.name}">${team.name}</option>`)
