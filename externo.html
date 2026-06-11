@@ -32,6 +32,7 @@
           linear-gradient(180deg, #090a10 0%, var(--bg) 56%, #050507 100%);
         color: var(--text);
         font-family: "Inter", system-ui, sans-serif;
+        animation: pageFadeIn .65s ease both;
       }
 
       body:before {
@@ -94,6 +95,7 @@
         border-bottom: 1px solid rgba(41,49,61,.78);
         background: rgba(7,8,11,.78);
         backdrop-filter: blur(18px);
+        animation: slideDown .55s ease both;
       }
 
       .topbar-inner {
@@ -118,9 +120,17 @@
         border-radius: 12px;
         display: grid;
         place-items: center;
-        background: linear-gradient(135deg, rgba(99,102,241,.3), rgba(20,184,166,.18));
+        background: #0f121a;
         color: #c4b5fd;
         box-shadow: 0 16px 40px rgba(99,102,241,.16);
+        overflow: hidden;
+      }
+
+      .mark img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
       }
 
       svg { width: 20px; height: 20px; }
@@ -158,6 +168,7 @@
       .hero {
         padding: 70px 0 34px;
         text-align: center;
+        animation: riseIn .7s .08s ease both;
       }
 
       .eyebrow {
@@ -212,17 +223,27 @@
 
       .server-banner {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(160px, 240px) minmax(0, 1fr);
         align-items: center;
-        justify-items: center;
+        justify-items: start;
         gap: 18px;
         min-height: 184px;
         padding: 22px;
         margin: 28px 0 14px;
-        text-align: center;
+        text-align: left;
         background:
           linear-gradient(135deg, rgba(9,159,255,.08), rgba(88,101,242,.07)),
           var(--panel);
+        animation: riseIn .55s .14s ease both;
+      }
+
+      .server-banner-photo {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        border: 1px solid rgba(148,163,184,.2);
+        border-radius: var(--radius);
+        object-fit: cover;
+        box-shadow: 0 18px 44px rgba(0,0,0,.36);
       }
 
       .server-banner > div {
@@ -256,6 +277,7 @@
         justify-items: center;
         padding: 24px;
         text-align: center;
+        animation: riseIn .55s ease both;
       }
 
       .info-label {
@@ -388,6 +410,9 @@
 
       .team-lb-card {
         padding: 18px;
+        position: relative;
+        overflow: hidden;
+        animation: riseIn .55s ease both;
       }
 
       .team-lb-head {
@@ -430,7 +455,13 @@
         border-radius: var(--radius);
         background: var(--panel-2);
         padding: 9px 10px;
+        animation: rowIn .36s ease both;
       }
+
+      .team-row:nth-child(2) { animation-delay: .04s; }
+      .team-row:nth-child(3) { animation-delay: .08s; }
+      .team-row:nth-child(4) { animation-delay: .12s; }
+      .team-row:nth-child(5) { animation-delay: .16s; }
 
       .team-rank {
         width: 26px;
@@ -483,6 +514,7 @@
         background: rgba(12, 14, 19, .9);
         box-shadow: 0 24px 80px rgba(0,0,0,.32);
         overflow: hidden;
+        animation: riseIn .65s .12s ease both;
       }
 
       .team-stats-header {
@@ -633,6 +665,7 @@
       .team-card-main,
       .team-card-status,
       .team-table-card {
+        position: relative;
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background: var(--panel);
@@ -640,6 +673,15 @@
 
       .team-card-main {
         padding: 20px;
+        animation: riseIn .45s ease both;
+      }
+
+      .team-card-main.has-photo {
+        background:
+          linear-gradient(180deg, rgba(9,12,18,.18), rgba(9,12,18,.92)),
+          url("server-image.png");
+        background-size: cover;
+        background-position: center;
       }
 
       .team-avatar {
@@ -684,6 +726,8 @@
       }
 
       .team-data-item {
+        position: relative;
+        overflow: hidden;
         min-height: 104px;
         display: grid;
         align-content: center;
@@ -693,7 +737,37 @@
         background: var(--panel-2);
         padding: 14px 10px;
         text-align: center;
+        animation: popIn .42s ease both;
       }
+
+      .team-loading .team-lb-card:after,
+      .team-loading .team-card-main:after,
+      .team-loading .team-data-item:after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+        transform: translateX(-100%);
+        animation: shimmer 1.2s infinite;
+      }
+
+      .team-loading-dots {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        padding: 18px;
+      }
+
+      .team-loading-dots span {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--indigo);
+        animation: loading 1.2s infinite ease-in-out;
+      }
+
+      .team-loading-dots span:nth-child(2) { animation-delay: .1s; }
+      .team-loading-dots span:nth-child(3) { animation-delay: .2s; }
 
       .team-data-item span {
         color: var(--muted);
@@ -913,6 +987,75 @@
 
       .rule-card strong {
         color: #fca5a5;
+      }
+
+      @keyframes pageFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes riseIn {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes rowIn {
+        from {
+          opacity: 0;
+          transform: translateX(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: scale(.96);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes shimmer {
+        to { transform: translateX(100%); }
+      }
+
+      @keyframes loading {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *:before,
+        *:after {
+          animation-duration: .01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: .01ms !important;
+        }
       }
 
       @media (max-width: 720px) {
