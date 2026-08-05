@@ -10,13 +10,13 @@
 <style>
   :root{
     --bg-void:      #0a0b10;
-    --bg-panel:     #12141b;
-    --bg-panel-2:   #171a22;
-    --line:         #22242c;
+    --bg-panel:     #12141bcc;
+    --bg-panel-2:   #171a22e6;
+    --line:         #2a2d38;
     --line-soft:    #1b1d25;
     --text-hi:      #f4f4f5;
     --text-mid:     #a7abb5;
-    --text-low:     #63676f;
+    --text-low:     #7d8189;
     --blue:         #2320d5;
     --blue-2:       #1852e1;
     --cyan:         #02c1fc;
@@ -49,17 +49,43 @@
     padding: 90px 20px 60px;
   }
 
-  /* ---------- ambient background ---------- */
+  /* ---------- background image ---------- */
+
+  .bg-photo{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background-image: url('nexus-bg.png');
+    background-size: cover;
+    background-position: center 40%;
+    background-repeat: no-repeat;
+    animation: bgBreathe 22s ease-in-out infinite alternate;
+    filter: saturate(1.1) brightness(0.85);
+  }
+  @keyframes bgBreathe{
+    0%   { transform: scale(1.0); background-position: center 40%; }
+    100% { transform: scale(1.08); background-position: center 44%; }
+  }
+
+  .bg-photo::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(6,8,14,0.35), rgba(6,8,14,0.86) 78%),
+      linear-gradient(180deg, rgba(6,8,14,0.55) 0%, rgba(6,8,14,0.55) 100%);
+  }
 
   .bg-glow{
     position:fixed;
     inset:0;
     z-index:0;
     background:
-      radial-gradient(circle at 15% 20%, rgba(35,32,213,0.20), transparent 42%),
-      radial-gradient(circle at 85% 15%, rgba(2,193,252,0.14), transparent 40%),
-      radial-gradient(circle at 50% 100%, rgba(35,32,213,0.12), transparent 45%);
+      radial-gradient(circle at 15% 20%, rgba(35,32,213,0.16), transparent 42%),
+      radial-gradient(circle at 85% 15%, rgba(2,193,252,0.12), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(35,32,213,0.10), transparent 45%);
     animation: drift 14s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
   }
   @keyframes drift{
     0%   { transform: scale(1) translate(0,0); }
@@ -70,12 +96,38 @@
     position:fixed;
     inset:0;
     z-index:0;
-    opacity:0.35;
+    opacity:0.18;
     background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
     background-size: 42px 42px;
     mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%);
+  }
+
+  /* floating light particles over the background photo */
+  .bg-particles{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .particle{
+    position:absolute;
+    bottom:-10%;
+    width: 3px;
+    height: 3px;
+    border-radius:50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px 2px rgba(2,193,252,0.85);
+    opacity:0;
+    animation: floatUp linear infinite;
+  }
+  @keyframes floatUp{
+    0%   { opacity:0; transform: translateY(0) translateX(0); }
+    8%   { opacity:0.9; }
+    90%  { opacity:0.5; }
+    100% { opacity:0; transform: translateY(-110vh) translateX(var(--drift, 30px)); }
   }
 
   .scan{
@@ -119,6 +171,7 @@
     padding: 9px 14px;
     border-radius: 7px;
     background: var(--bg-panel);
+    backdrop-filter: blur(6px);
   }
   .top-brand .accent{
     background: linear-gradient(90deg, var(--blue-2), var(--cyan));
@@ -162,6 +215,7 @@
     padding: 6px 12px 6px 6px;
     border-radius: 7px;
     background: var(--bg-panel);
+    backdrop-filter: blur(6px);
     cursor: pointer;
     position: relative;
     transition: color .15s ease, border-color .15s ease, background .15s ease;
@@ -200,6 +254,7 @@
     width: 260px;
     max-width: calc(100vw - 44px);
     background: var(--bg-panel);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--line);
     border-radius: 10px;
     overflow:hidden;
@@ -311,6 +366,7 @@
     padding: 6px 12px 6px 6px;
     border-radius: 7px;
     background: var(--bg-panel);
+    backdrop-filter: blur(6px);
     cursor: pointer;
     transition: color .15s ease, border-color .15s ease, background .15s ease;
   }
@@ -331,6 +387,7 @@
     right:0;
     min-width: 150px;
     background: var(--bg-panel);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--line);
     border-radius: 9px;
     overflow:hidden;
@@ -404,17 +461,22 @@
     display:inline-block;
     opacity:0;
     transform: translateY(18px);
-    animation: letterIn .55s cubic-bezier(.2,.8,.2,1) forwards;
+    animation: letterIn .55s cubic-bezier(.2,.8,.2,1) forwards, letterGlow 3.2s ease-in-out infinite;
+    animation-delay: var(--d, 0s), 0s;
     text-shadow: 0 0 26px rgba(2,193,252,0.25);
   }
-  .brand-hero .letter:nth-child(1){ color:#2320d5; animation-delay:.10s; }
-  .brand-hero .letter:nth-child(2){ color:#1c3edc; animation-delay:.16s; }
-  .brand-hero .letter:nth-child(3){ color:#1852e1; animation-delay:.22s; }
-  .brand-hero .letter:nth-child(4){ color:#0e85ed; animation-delay:.28s; }
-  .brand-hero .letter:nth-child(5){ color:#02c1fc; animation-delay:.34s; }
+  .brand-hero .letter:nth-child(1){ color:#2320d5; --d:.10s; animation-delay:.10s, 1.4s; }
+  .brand-hero .letter:nth-child(2){ color:#1c3edc; --d:.16s; animation-delay:.16s, 1.6s; }
+  .brand-hero .letter:nth-child(3){ color:#1852e1; --d:.22s; animation-delay:.22s, 1.8s; }
+  .brand-hero .letter:nth-child(4){ color:#0e85ed; --d:.28s; animation-delay:.28s, 2.0s; }
+  .brand-hero .letter:nth-child(5){ color:#02c1fc; --d:.34s; animation-delay:.34s, 2.2s; }
 
   @keyframes letterIn{
     to{ opacity:1; transform: translateY(0); }
+  }
+  @keyframes letterGlow{
+    0%, 100%{ text-shadow: 0 0 26px rgba(2,193,252,0.25); }
+    50%{ text-shadow: 0 0 40px rgba(2,193,252,0.65), 0 0 14px rgba(2,193,252,0.5); }
   }
 
   .brand-hero small{
@@ -461,6 +523,7 @@
     border-radius: 12px;
     border: 1px solid var(--line);
     background: var(--bg-panel);
+    backdrop-filter: blur(8px);
     overflow:hidden;
     opacity:0;
     transform: translateY(16px);
@@ -595,6 +658,7 @@
     border-radius: 12px;
     border: 1px solid var(--line);
     background: var(--bg-panel);
+    backdrop-filter: blur(8px);
     overflow:hidden;
     transition: border-color .2s ease, transform .2s ease, background .2s ease;
   }
@@ -685,6 +749,7 @@
     padding: 8px 14px;
     border-radius: 7px;
     background: var(--bg-panel);
+    backdrop-filter: blur(6px);
     opacity:0;
     animation: fadeUp .6s ease forwards;
     animation-delay: .84s;
@@ -712,7 +777,8 @@
     padding: 24px 28px;
     border-radius: 12px;
     border: 1px solid var(--line);
-    background: linear-gradient(120deg, rgba(88,101,242,0.14), rgba(88,101,242,0.03));
+    background: linear-gradient(120deg, rgba(88,101,242,0.18), rgba(88,101,242,0.05));
+    backdrop-filter: blur(8px);
     overflow:hidden;
     transition: border-color .2s ease, transform .2s ease, background .2s ease;
   }
@@ -1079,8 +1145,10 @@
     </div>
   </div>
 
+  <div class="bg-photo"></div>
   <div class="bg-glow"></div>
   <div class="bg-grid"></div>
+  <div class="bg-particles" id="bg-particles"></div>
   <div class="scan"></div>
 
   <!-- ================= TOP-LEFT BRAND ================= -->
@@ -1224,6 +1292,28 @@
   </div>
 
 <script>
+  /* ============ PARTICULAS FLOTANTES SOBRE EL FONDO ============ */
+  (function spawnParticles(){
+    const wrap = document.getElementById('bg-particles');
+    const total = 26;
+    for (let i = 0; i < total; i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const left = Math.random() * 100;
+      const dur = 10 + Math.random() * 14;
+      const delay = Math.random() * 18;
+      const drift = (Math.random() * 60 - 30) + 'px';
+      const size = (2 + Math.random() * 2.5).toFixed(1) + 'px';
+      p.style.left = left + 'vw';
+      p.style.width = size;
+      p.style.height = size;
+      p.style.setProperty('--drift', drift);
+      p.style.animationDuration = dur + 's';
+      p.style.animationDelay = delay + 's';
+      wrap.appendChild(p);
+    }
+  })();
+
   /* ============ REGISTER GATE ============ */
 
   // Reemplazá esto por tu backend real (o un webhook) que reciba el JSON y lo guarde/valide.
