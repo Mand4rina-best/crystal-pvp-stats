@@ -962,6 +962,48 @@
     border-radius: 20px;
   }
 
+  .gate-ticket-box{
+    margin: 18px 0 6px;
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(255,216,168,0.08);
+    border: 1px solid rgba(255,216,168,0.35);
+  }
+
+  .gate-ticket-label{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  .gate-ticket-number{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight:700;
+    letter-spacing: 3px;
+    color: var(--text-hi);
+  }
+
+  .gate-ticket-note{
+    margin-top: 10px;
+    font-size: 12.5px;
+    line-height:1.5;
+    color: var(--text-mid);
+  }
+
+  .gate-ticket-note code{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--cyan);
+    background: var(--bg-panel-2);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
   .gate-continue{
     width:100%;
     margin-top: 20px;
@@ -1021,6 +1063,15 @@
         <div class="gate-pending-text" data-i18n="gate_pending_text">
           El STAFF va a confirmar que sos el verdadero tutor de esta cuenta antes de darte acceso completo.
         </div>
+
+        <div class="gate-ticket-box">
+          <div class="gate-ticket-label" data-i18n="gate_pending_ticket_label">Este es tu número de ticket</div>
+          <div class="gate-ticket-number" id="gate-ticket-number">——————</div>
+          <div class="gate-ticket-note" data-i18n="gate_pending_ticket_note">
+            Anotalo: lo vas a necesitar en Discord para abrir tu canal privado con el STAFF, usando el comando <code>/registrar-ticket</code>.
+          </div>
+        </div>
+
         <div class="gate-pending-id" id="gate-pending-id">SteamID64: —</div>
         <button class="gate-continue" type="button" onclick="dismissGate()" data-i18n="gate_continue_btn">Entendido, continuar</button>
       </div>
@@ -1176,9 +1227,19 @@
   /* ============ REGISTER GATE ============ */
 
   // Reemplazá esto por tu backend real (o un webhook) que reciba el JSON y lo guarde/valide.
+  // Ese backend es el que debe pedirle el número de ticket al bot de Discord
+  // (GET /api/ticket/new en nexus-bot.js) y devolverlo en la respuesta como { ticket: "123456" }.
   const REGISTER_ENDPOINT = "https://TU-BACKEND-AQUI.com/api/register";
 
   const GATE_STORAGE_KEY = "nexus_gate_steamid"; // solo guardamos el SteamID64, nunca la contraseña
+  const GATE_TICKET_KEY = "nexus_gate_ticket"; // guardamos el número de ticket para poder mostrarlo de nuevo
+
+  // Genera un ticket de respaldo SOLO si tu backend todavía no está conectado
+  // al bot. En producción, el número real debe venir siempre del backend
+  // (que a su vez lo pide al bot), para que coincida con lo que el bot valida.
+  function generarTicketDeRespaldo(){
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
 
   let currentGateLang = "es"; // se actualiza en setLang(); usado para mensajes dinámicos del gate
 
@@ -1218,26 +1279,41 @@
     submitBtn.disabled = true;
     submitBtn.textContent = dict.gate_submit_sending;
 
+    let numeroTicket = null;
+
     try {
-      await fetch(REGISTER_ENDPOINT, {
+      const resp = await fetch(REGISTER_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
+      const data = await resp.json().catch(() => null);
+      if (data && data.ticket) {
+        numeroTicket = String(data.ticket);
+      }
     } catch (err) {
       // Si todavía no configuraste el backend, el registro sigue mostrando
       // la pantalla de espera igual, pero no se está enviando a ningún lado.
       console.warn("No se pudo enviar el registro al backend:", err);
     }
 
+    // Respaldo: si el backend no devolvió un ticket (por ejemplo, todavía no
+    // está conectado al bot), generamos uno solo para no dejar la pantalla vacía.
+    // ⚠️ Este ticket de respaldo NO va a coincidir con el que valida el bot.
+    if (!numeroTicket) {
+      numeroTicket = generarTicketDeRespaldo();
+    }
+
     try {
       localStorage.setItem(GATE_STORAGE_KEY, steamId64);
+      localStorage.setItem(GATE_TICKET_KEY, numeroTicket);
     } catch (err) {}
 
     showProfileChip(steamId64);
 
     document.getElementById("gate-form").classList.add("is-hidden");
     document.getElementById("gate-pending").classList.add("is-active");
+    document.getElementById("gate-ticket-number").textContent = numeroTicket;
     document.getElementById("gate-pending-id").textContent = "SteamID64: " + steamId64;
     document.getElementById("gate-subtitle").textContent = "Registro enviado";
 
@@ -1374,6 +1450,8 @@
       gate_note: "This password is only for your NEXUS account,<br> it is not your Steam password.",
       gate_pending_title: "Now Wait!",
       gate_pending_text: "STAFF will confirm you are the real owner of this account before granting full access.",
+      gate_pending_ticket_label: "This is your ticket number",
+      gate_pending_ticket_note: "Save it: you'll need it on Discord to open your private channel with STAFF, using the <code>/registrar-ticket</code> command.",
       gate_continue_btn: "Got it, continue",
       gate_submit_sending: "SENDING...",
       gate_err_steamid: "Invalid SteamID64. It must have 17 digits (e.g. 76561198012345678).",
@@ -1412,6 +1490,8 @@
       gate_note: "Esta contraseña es solo para tu cuenta en NEXUS,<br> no es tu contraseña de Steam.",
       gate_pending_title: "¡Ahora Espera!",
       gate_pending_text: "El STAFF va a confirmar que sos el verdadero tutor de esta cuenta antes de darte acceso completo.",
+      gate_pending_ticket_label: "Este es tu número de ticket",
+      gate_pending_ticket_note: "Anotalo: lo vas a necesitar en Discord para abrir tu canal privado con el STAFF, usando el comando <code>/registrar-ticket</code>.",
       gate_continue_btn: "Entendido, continuar",
       gate_submit_sending: "ENVIANDO...",
       gate_err_steamid: "SteamID64 inválido. Debe tener 17 dígitos (ej: 76561198012345678).",
@@ -1450,6 +1530,8 @@
       gate_note: "Esta senha é apenas para sua conta na NEXUS,<br> não é sua senha da Steam.",
       gate_pending_title: "Agora Espere!",
       gate_pending_text: "O STAFF vai confirmar que você é o verdadeiro dono desta conta antes de liberar o acesso completo.",
+      gate_pending_ticket_label: "Este é o seu número de ticket",
+      gate_pending_ticket_note: "Anote: você vai precisar dele no Discord para abrir seu canal privado com o STAFF, usando o comando <code>/registrar-ticket</code>.",
       gate_continue_btn: "Entendi, continuar",
       gate_submit_sending: "ENVIANDO...",
       gate_err_steamid: "SteamID64 inválido. Deve ter 17 dígitos (ex: 76561198012345678).",
@@ -1488,6 +1570,8 @@
       gate_note: "To hasło jest tylko do Twojego konta NEXUS,<br> to nie jest Twoje hasło Steam.",
       gate_pending_title: "Teraz Poczekaj!",
       gate_pending_text: "STAFF potwierdzi, że jesteś prawdziwym właścicielem tego konta, zanim otrzymasz pełny dostęp.",
+      gate_pending_ticket_label: "To jest twój numer ticketu",
+      gate_pending_ticket_note: "Zapisz go: będzie potrzebny na Discordzie, aby otworzyć prywatny kanał ze STAFFEM, za pomocą komendy <code>/registrar-ticket</code>.",
       gate_continue_btn: "Rozumiem, kontynuuj",
       gate_submit_sending: "WYSYŁANIE...",
       gate_err_steamid: "Nieprawidłowy SteamID64. Musi mieć 17 cyfr (np. 76561198012345678).",
@@ -1512,7 +1596,7 @@
       const key = el.getAttribute("data-i18n");
       if (key === "footer_owners") return; // keeps Holsky/Grinek bold, not translated
       if (!dict[key]) return;
-      if (key === "gate_note"){ el.innerHTML = dict[key]; }
+      if (key === "gate_note" || key === "gate_pending_ticket_note"){ el.innerHTML = dict[key]; }
       else { el.textContent = dict[key]; }
     });
 
