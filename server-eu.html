@@ -410,7 +410,7 @@
       </div>
       <div class="round-stats">
         <div class="round-stat">
-          <div class="val">7/15</div>
+          <div class="val">0/15</div>
           <div class="lbl">ACTIVE PLAYERS</div>
         </div>
         <div class="round-stat">
@@ -439,25 +439,25 @@
         <tbody id="board-body"></tbody>
       </table>
 
+      <div class="board-foot">IP SERVER: <span class="mono" style="color:var(--cyan);">89.144.32.13:23001</span></div>
     </div>
 
   </div>
 
 <script>
-  const PLAYERS = [
-    { name:"kryst4l",  kills:13, deaths:4, elo:25  },
-    { name:"lunaire",  kills:10, deaths:5, elo:15  },
-    { name:"brawnix",  kills:8,  deaths:6, elo:9   },
-    { name:"iceborn",  kills:6,  deaths:6, elo:0   },
-    { name:"tempesta", kills:5,  deaths:7, elo:-6  },
-    { name:"voss_ke",  kills:3,  deaths:8, elo:-13 },
-    { name:"nordheim", kills:2,  deaths:9, elo:-17 },
-  ];
+  const PLAYERS = [];
 
   function eloClass(e){ return e > 0 ? "elo-pos" : e < 0 ? "elo-neg" : "elo-zero"; }
   function eloText(e){ return e > 0 ? `+${e}` : `${e}`; }
 
   const body = document.getElementById("board-body");
+
+  if (PLAYERS.length === 0){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" style="text-align:center; color:var(--text-low); padding:24px 18px;">No players connected</td>`;
+    body.appendChild(tr);
+  }
+
   PLAYERS
     .slice()
     .sort((a,b) => (b.kills/(b.deaths||1)) - (a.kills/(a.deaths||1)))

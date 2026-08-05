@@ -410,7 +410,7 @@
       </div>
       <div class="round-stats">
         <div class="round-stat">
-          <div class="val">9/15</div>
+          <div class="val">0/15</div>
           <div class="lbl">ACTIVE PLAYERS</div>
         </div>
         <div class="round-stat">
@@ -439,27 +439,25 @@
         <tbody id="board-body"></tbody>
       </table>
 
+      <div class="board-foot">IP SERVER: <span class="mono" style="color:var(--cyan);">45.235.98.186:9700</span></div>
     </div>
 
   </div>
 
 <script>
-  const PLAYERS = [
-    { name:"whois",       kills:14, deaths:3,  elo:28  },
-    { name:"mand4irina",  kills:11, deaths:4,  elo:19  },
-    { name:"nexus_kai",   kills:9,  deaths:5,  elo:12  },
-    { name:"valeria.cr",  kills:8,  deaths:6,  elo:8   },
-    { name:"draco_pe",    kills:6,  deaths:7,  elo:-4  },
-    { name:"shadow_ar",   kills:5,  deaths:8,  elo:-9  },
-    { name:"luz_del_sur", kills:4,  deaths:5,  elo:-2  },
-    { name:"rio_negro",   kills:3,  deaths:6,  elo:-11 },
-    { name:"andes_fox",   kills:2,  deaths:7,  elo:-15 },
-  ];
+  const PLAYERS = [];
 
   function eloClass(e){ return e > 0 ? "elo-pos" : e < 0 ? "elo-neg" : "elo-zero"; }
   function eloText(e){ return e > 0 ? `+${e}` : `${e}`; }
 
   const body = document.getElementById("board-body");
+
+  if (PLAYERS.length === 0){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" style="text-align:center; color:var(--text-low); padding:24px 18px;">No players connected</td>`;
+    body.appendChild(tr);
+  }
+
   PLAYERS
     .slice()
     .sort((a,b) => (b.kills/(b.deaths||1)) - (a.kills/(a.deaths||1)))
