@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS // RULES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:      #0a0b10;
+    --bg-panel:     #12141b;
+    --bg-panel-2:   #171a22;
+    --line:         #22242c;
+    --line-soft:    #1b1d25;
+    --text-hi:      #f4f4f5;
+    --text-mid:     #a7abb5;
+    --text-low:     #63676f;
+    --blue:         #2320d5;
+    --blue-2:       #1852e1;
+    --cyan:         #02c1fc;
+    --amber:        #ffd8a8;
+    --red:          #ff4d5e;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg-void);
+    color: var(--text-hi);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ text-decoration:none; color:inherit; }
+
+  body{
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* ---------- ambient background ---------- */
+
+  .bg-glow{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(35,32,213,0.18), transparent 40%),
+      radial-gradient(circle at 90% 10%, rgba(2,193,252,0.12), transparent 38%),
+      radial-gradient(circle at 50% 100%, rgba(255,77,94,0.06), transparent 45%);
+    animation: drift 16s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%{ transform: scale(1) translate(0,0); }
+    100%{ transform: scale(1.07) translate(-1%,1%); }
+  }
+
+  .bg-grid{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    opacity:0.3;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(circle at 50% 10%, black, transparent 70%);
+  }
+
+  .scan{
+    position:fixed;
+    left:0; right:0;
+    height:2px;
+    z-index:1;
+    background: linear-gradient(90deg, transparent, rgba(2,193,252,0.5), transparent);
+    animation: scan 7s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes scan{
+    0%{ top:-2%; opacity:0; }
+    8%{ opacity:1; }
+    50%{ opacity:.55; }
+    92%{ opacity:0; }
+    100%{ top:102%; opacity:0; }
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform: translateY(14px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  /* ---------- shell ---------- */
+
+  .shell{
+    position:relative;
+    z-index:2;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* ---------- header ---------- */
+
+  .top-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 16px;
+    margin-bottom: 34px;
+    opacity:0;
+    animation: fadeUp .5s ease forwards;
+  }
+
+  .menu-back{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:600;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 9px 16px 9px 13px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+    transition: color .15s ease, border-color .15s ease, background .15s ease, transform .15s ease;
+  }
+  .menu-back:hover{
+    color: var(--text-hi);
+    border-color: var(--cyan);
+    background: var(--bg-panel-2);
+    transform: translateX(-2px);
+  }
+
+  .server-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 7px 12px;
+    border-radius: 6px;
+    background: var(--bg-panel);
+  }
+  .server-tag b{ color: var(--amber); font-weight:600; }
+
+  /* ---------- hero / title ---------- */
+
+  .hero{
+    text-align:center;
+    margin-bottom: 44px;
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-low);
+    text-transform:uppercase;
+    opacity:0;
+    animation: fadeUp .55s ease forwards;
+    animation-delay: .08s;
+  }
+
+  .server-name{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:12px;
+    margin: 12px 0 4px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:800;
+    font-size: clamp(34px, 6.4vw, 56px);
+    letter-spacing: 1px;
+  }
+  .server-name .letter{
+    display:inline-block;
+    opacity:0;
+    transform: translateY(16px);
+    animation: letterIn .5s cubic-bezier(.2,.8,.2,1) forwards;
+    text-shadow: 0 0 24px rgba(2,193,252,0.22);
+  }
+  .server-name .letter:nth-child(1){ color:#2320d5; animation-delay:.14s; }
+  .server-name .letter:nth-child(2){ color:#1c3edc; animation-delay:.19s; }
+  .server-name .letter:nth-child(3){ color:#1852e1; animation-delay:.24s; }
+  .server-name .letter:nth-child(4){ color:#0e85ed; animation-delay:.29s; }
+  .server-name .letter:nth-child(5){ color:#02c1fc; animation-delay:.34s; }
+  @keyframes letterIn{ to{ opacity:1; transform: translateY(0); } }
+
+  .rules-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: clamp(18px, 3vw, 24px);
+    letter-spacing: 0.5px;
+    color: var(--text-hi);
+    opacity:0;
+    animation: fadeUp .55s ease forwards;
+    animation-delay: .42s;
+  }
+  .rules-title .glow{
+    background: linear-gradient(90deg, var(--blue-2), var(--cyan));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    position:relative;
+  }
+
+  .subtitle{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--text-low);
+    margin-top: 8px;
+    opacity:0;
+    animation: fadeUp .55s ease forwards;
+    animation-delay: .5s;
+  }
+
+  /* ---------- rule cards ---------- */
+
+  .rules-list{
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+
+  .rule-card{
+    position:relative;
+    display:flex;
+    gap: 16px;
+    padding: 20px 22px;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+    background: var(--bg-panel);
+    opacity:0;
+    transform: translateY(16px);
+    animation: fadeUp .5s ease forwards;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+    overflow:hidden;
+  }
+  .rule-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(135deg, rgba(35,32,213,0.10), rgba(2,193,252,0.05));
+    opacity:0;
+    transition: opacity .2s ease;
+  }
+  .rule-card:hover{
+    border-color: var(--blue-2);
+    background: var(--bg-panel-2);
+    transform: translateY(-2px);
+  }
+  .rule-card:hover::before{ opacity:1; }
+
+  .rule-card:nth-child(1){ animation-delay: .56s; }
+  .rule-card:nth-child(2){ animation-delay: .62s; }
+  .rule-card:nth-child(3){ animation-delay: .68s; }
+  .rule-card:nth-child(4){ animation-delay: .74s; }
+  .rule-card:nth-child(5){ animation-delay: .80s; }
+
+  .rule-num{
+    position:relative;
+    z-index:1;
+    flex: 0 0 auto;
+    width: 38px; height:38px;
+    border-radius: 9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:600;
+    font-size: 14px;
+    background: linear-gradient(150deg, var(--blue), var(--cyan));
+    color: var(--text-hi);
+  }
+
+  .rule-body{ position:relative; z-index:1; }
+
+  .rule-heading{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 16.5px;
+    letter-spacing: 0.3px;
+    color: var(--text-hi);
+    margin-bottom: 5px;
+  }
+
+  .rule-text{
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-mid);
+  }
+
+  .bad{
+    color: var(--red);
+    font-weight: 600;
+    background: rgba(255,77,94,0.10);
+    border-radius: 4px;
+    padding: 0 3px;
+  }
+
+  /* ---------- note ---------- */
+
+  .note{
+    margin-top: 22px;
+    display:flex;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,216,168,0.28);
+    background: rgba(255,216,168,0.06);
+    opacity:0;
+    transform: translateY(16px);
+    animation: fadeUp .5s ease forwards;
+    animation-delay: .88s;
+  }
+  .note-icon{
+    flex: 0 0 auto;
+    font-size: 17px;
+  }
+  .note-text{
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-mid);
+  }
+  .note-text b{ color: var(--amber); }
+  .note-text a{
+    color: var(--cyan);
+    border-bottom: 1px dashed rgba(2,193,252,0.4);
+  }
+  .note-text a:hover{ color: var(--text-hi); }
+
+  .rules-foot{
+    text-align:center;
+    margin-top: 40px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-low);
+    opacity:0;
+    animation: fadeUp .5s ease forwards;
+    animation-delay: .94s;
+  }
+
+  /* ---------- LANGUAGE SELECTOR ---------- */
+  /* ---------- top-right bar (profile + language selector) ---------- */
+
+  .topbar-right{
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .profile-chip{
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 6px 12px 6px 6px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+    cursor: pointer;
+    position: relative;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .profile-chip.is-visible{ display:flex; }
+  .profile-chip:hover{ color: var(--text-hi); border-color: var(--cyan); background: var(--bg-panel-2); }
+
+  .profile-avatar{
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    background: linear-gradient(150deg, var(--blue), var(--cyan));
+  }
+  .profile-name{
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-hi);
+    font-weight: 600;
+  }
+  .profile-dot{
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    background: var(--amber);
+  }
+  .profile-dot.is-verified{ background: var(--green); }
+
+  .profile-panel{
+    position:absolute;
+    top: calc(100% + 8px);
+    right:0;
+    width: 260px;
+    max-width: calc(100vw - 44px);
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow:hidden;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+    opacity:0;
+    transform: translateY(-6px);
+    pointer-events:none;
+    transition: opacity .15s ease, transform .15s ease;
+    cursor: default;
+  }
+  .profile-chip.is-open .profile-panel{ opacity:1; transform: translateY(0); pointer-events:auto; }
+
+  .profile-panel-head{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 16px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    background: linear-gradient(135deg, rgba(35,32,213,0.14), rgba(2,193,252,0.08));
+  }
+  .profile-panel-avatar{
+    width: 44px; height: 44px;
+    border-radius: 9px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    background: linear-gradient(150deg, var(--blue), var(--cyan));
+  }
+  .profile-panel-name{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 16.5px;
+    color: var(--text-hi);
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width: 150px;
+  }
+  .profile-status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap: 5px;
+    margin-top: 3px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight:600;
+    letter-spacing:.4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(255,216,168,0.14);
+    color: var(--amber);
+    border: 1px solid rgba(255,216,168,0.35);
+  }
+  .profile-status-badge.is-verified{
+    background: rgba(61,220,132,0.14);
+    color: var(--green);
+    border-color: rgba(61,220,132,0.35);
+  }
+
+  .profile-panel-body{
+    padding: 14px 16px 16px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .profile-tile{
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 8px;
+    padding: 9px 11px;
+  }
+  .profile-tile.span-2{ grid-column: 1 / -1; }
+  .profile-tile .profile-tile-label{
+    font-family:'Rajdhani', sans-serif;
+    font-size: 10.5px;
+    font-weight:600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-low);
+    margin-bottom: 4px;
+  }
+  .profile-tile .profile-tile-value{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight:600;
+    color: var(--text-hi);
+  }
+  .profile-tile.accent .profile-tile-value{ color: var(--cyan); }
+
+  .lang-select{ position: relative; z-index: 60; }
+  .lang-btn{
+    display:flex; align-items:center; gap: 8px;
+    font-family:'JetBrains Mono', monospace; font-size: 12.5px; font-weight:500;
+    color: var(--text-mid); border: 1px solid var(--line); padding: 6px 12px 6px 6px;
+    border-radius: 7px; background: var(--bg-panel); cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .lang-btn:hover{ color: var(--text-hi); border-color: var(--cyan); background: var(--bg-panel-2); }
+  .lang-logo{ width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex: 0 0 auto; }
+  .lang-caret{ font-size: 10px; color: var(--text-low); transition: transform .15s ease; }
+  .lang-select.is-open .lang-caret{ transform: rotate(180deg); }
+  .lang-menu{
+    position:absolute; top: calc(100% + 8px); right:0; min-width: 150px;
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 9px;
+    overflow:hidden; box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+    opacity:0; transform: translateY(-6px); pointer-events:none;
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .lang-select.is-open .lang-menu{ opacity:1; transform: translateY(0); pointer-events:auto; }
+  .lang-option{
+    display:flex; align-items:center; gap: 9px; padding: 10px 13px;
+    font-family:'Rajdhani', sans-serif; font-weight:600; font-size: 14px;
+    color: var(--text-mid); cursor:pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .lang-option:hover{ background: var(--bg-panel-2); color: var(--text-hi); }
+  .lang-option.is-selected{ color: var(--cyan); }
+  .lang-flag{ font-size: 15px; }
+</style>
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+  <div class="scan"></div>
+
+  <!-- ================= LANGUAGE SELECTOR ================= -->
+  <div class="topbar-right" id="topbar-right">
+
+    <!-- ---------- PROFILE CHIP (visible once registered) ---------- -->
+    <div class="profile-chip" id="profile-chip" onclick="toggleProfilePanel(event)">
+      <img class="profile-avatar" id="profile-avatar" src="nexus-logo.png" alt="">
+      <span class="profile-dot" id="profile-dot"></span>
+      <span class="profile-name" id="profile-name">—</span>
+
+      <div class="profile-panel" id="profile-panel" onclick="event.stopPropagation()">
+        <div class="profile-panel-head">
+          <img class="profile-panel-avatar" id="profile-panel-avatar" src="nexus-logo.png" alt="">
+          <div>
+            <div class="profile-panel-name" id="profile-panel-name">—</div>
+            <div class="profile-status-badge" id="profile-status-badge">En Progreso</div>
+          </div>
+        </div>
+        <div class="profile-panel-body">
+          <div class="profile-tile span-2">
+            <div class="profile-tile-label" id="profile-nat-label">Nacionalidad</div>
+            <div class="profile-tile-value" id="profile-nationality">—</div>
+          </div>
+          <div class="profile-tile">
+            <div class="profile-tile-label" id="profile-kills-label">Kills</div>
+            <div class="profile-tile-value" id="profile-kills">—</div>
+          </div>
+          <div class="profile-tile">
+            <div class="profile-tile-label" id="profile-deaths-label">Deaths</div>
+            <div class="profile-tile-value" id="profile-deaths">—</div>
+          </div>
+          <div class="profile-tile accent span-2">
+            <div class="profile-tile-label" id="profile-kd-label">K/D Ratio</div>
+            <div class="profile-tile-value" id="profile-kd">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- LANGUAGE SELECTOR ---------- -->
+    <div class="lang-select" id="lang-select">
+      <button class="lang-btn" onclick="toggleLangMenu()">
+        <img class="lang-logo" src="nexus-logo.png" alt="Nexus">
+        <span id="lang-current-code">EN</span>
+        <span class="lang-caret">▾</span>
+      </button>
+      <div class="lang-menu" id="lang-menu">
+        <div class="lang-option is-selected" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
+        <div class="lang-option" data-lang="es" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span>Español</div>
+        <div class="lang-option" data-lang="pt" onclick="setLang('pt')"><span class="lang-flag">🇧🇷</span>Brazil</div>
+        <div class="lang-option" data-lang="pl" onclick="setLang('pl')"><span class="lang-flag">🇵🇱</span>Polaco</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="shell">
+
+    <div class="top-bar">
+      <a class="menu-back" href="index.html">← <span id="menu-back-label">Volver Al Menú</span></a>
+    </div>
+
+    <div class="hero">
+      <div class="server-name">
+        <span class="letter">N</span><span class="letter">E</span><span class="letter">X</span><span class="letter">U</span><span class="letter">S</span>
+      </div>
+      <div class="rules-title">SCP: Secret Laboratory <span class="glow" data-i18n="rules_title_highlight">Nexus PvP Rules</span></div>
+      <div class="subtitle" data-i18n="rules_subtitle">Read them in full before playing — they apply without exception</div>
+    </div>
+
+    <div class="rules-list">
+
+      <div class="rule-card">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <div class="rule-heading" data-i18n="rule1_heading">General Standards &amp; Behavior</div>
+          <div class="rule-text" data-i18n-html="rule1_text">
+            Compliance with official game platform policies and server standards is mandatory.
+            Zero tolerance for <span class="bad">toxicity</span>, <span class="bad">hate speech</span>,
+            <span class="bad">harassment</span>, <span class="bad">NSFW content</span>, or
+            <span class="bad">offensive usernames/avatars</span>.
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <div class="rule-heading" data-i18n="rule2_heading">Pure FFA &amp; No Teaming</div>
+          <div class="rule-text" data-i18n-html="rule2_text">
+            This is a free-for-all environment. <span class="bad">Teaming</span>,
+            <span class="bad">boosting</span>, or any form of
+            <span class="bad">unfair collaboration</span> is banned.
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <div class="rule-heading" data-i18n="rule3_heading">Zero Exploits</div>
+          <div class="rule-text" data-i18n-html="rule3_text">
+            Using <span class="bad">cheats</span>, <span class="bad">macros</span>,
+            <span class="bad">third-party software</span>, or
+            <span class="bad">abusing map bugs/glitches</span> means an instant ban.
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-num">04</div>
+        <div class="rule-body">
+          <div class="rule-heading" data-i18n="rule4_heading">Mic &amp; Chat Discipline</div>
+          <div class="rule-text" data-i18n-html="rule4_text">
+            No <span class="bad">mic-spamming</span>, <span class="bad">chat flooding</span>,
+            <span class="bad">deep trolling</span>, or
+            <span class="bad">intentionally disrupting matches</span>.
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-num">05</div>
+        <div class="rule-body">
+          <div class="rule-heading" data-i18n="rule5_heading">Staff Compliance</div>
+          <div class="rule-text" data-i18n-html="rule5_text">
+            Direct instructions from the administration must be followed immediately.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <div class="note-icon">⚠️</div>
+      <div class="note-text" data-i18n-html="note_text">
+        <b>Note:</b> Management retains the right to remove any individual to protect the server
+        environment. Unfair ban appeals can be handled on our
+        <a href="https://discord.gg/4uAK7mzXKp" target="_blank" rel="noopener">Discord</a>.
+      </div>
+    </div>
+
+    <div class="rules-foot" data-i18n="rules_foot">NEXUS RANKING — SERVER POLICY</div>
+
+  </div>
+
+<script>
+  const I18N = {
+    en: {
+      back: "Back To Menu",
+      code: "EN",
+      rules_title_highlight: "Nexus PvP Rules",
+      rules_subtitle: "Read them in full before playing — they apply without exception",
+      rule1_heading: "General Standards &amp; Behavior",
+      rule1_text: 'Compliance with official game platform policies and server standards is mandatory. Zero tolerance for <span class="bad">toxicity</span>, <span class="bad">hate speech</span>, <span class="bad">harassment</span>, <span class="bad">NSFW content</span>, or <span class="bad">offensive usernames/avatars</span>.',
+      rule2_heading: "Pure FFA &amp; No Teaming",
+      rule2_text: 'This is a free-for-all environment. <span class="bad">Teaming</span>, <span class="bad">boosting</span>, or any form of <span class="bad">unfair collaboration</span> is banned.',
+      rule3_heading: "Zero Exploits",
+      rule3_text: 'Using <span class="bad">cheats</span>, <span class="bad">macros</span>, <span class="bad">third-party software</span>, or <span class="bad">abusing map bugs/glitches</span> means an instant ban.',
+      rule4_heading: "Mic &amp; Chat Discipline",
+      rule4_text: 'No <span class="bad">mic-spamming</span>, <span class="bad">chat flooding</span>, <span class="bad">deep trolling</span>, or <span class="bad">intentionally disrupting matches</span>.',
+      rule5_heading: "Staff Compliance",
+      rule5_text: "Direct instructions from the administration must be followed immediately.",
+      note_text: '<b>Note:</b> Management retains the right to remove any individual to protect the server environment. Unfair ban appeals can be handled on our <a href="https://discord.gg/4uAK7mzXKp" target="_blank" rel="noopener">Discord</a>.',
+      rules_foot: "NEXUS RANKING — SERVER POLICY"
+    },
+    es: {
+      back: "Volver Al Menú",
+      code: "ES",
+      rules_title_highlight: "Reglas PvP de Nexus",
+      rules_subtitle: "Léelas completas antes de jugar — se aplican sin excepción",
+      rule1_heading: "Normas Generales y Comportamiento",
+      rule1_text: 'El cumplimiento de las políticas oficiales de la plataforma de juego y las normas del servidor es obligatorio. Tolerancia cero a la <span class="bad">toxicidad</span>, el <span class="bad">discurso de odio</span>, el <span class="bad">acoso</span>, el <span class="bad">contenido NSFW</span> o los <span class="bad">nombres de usuario/avatares ofensivos</span>.',
+      rule2_heading: "FFA Puro y Sin Equipos",
+      rule2_text: 'Este es un entorno todos contra todos. El <span class="bad">teaming</span>, el <span class="bad">boosting</span> o cualquier forma de <span class="bad">colaboración injusta</span> está prohibido.',
+      rule3_heading: "Cero Exploits",
+      rule3_text: 'Usar <span class="bad">cheats</span>, <span class="bad">macros</span>, <span class="bad">software de terceros</span> o <span class="bad">abusar de bugs/glitches del mapa</span> significa un ban instantáneo.',
+      rule4_heading: "Disciplina de Micrófono y Chat",
+      rule4_text: 'No se permite el <span class="bad">spam de micrófono</span>, el <span class="bad">flood de chat</span>, el <span class="bad">trolleo excesivo</span> ni <span class="bad">interrumpir partidas intencionalmente</span>.',
+      rule5_heading: "Cumplimiento con el Staff",
+      rule5_text: "Las instrucciones directas de la administración deben cumplirse de inmediato.",
+      note_text: '<b>Nota:</b> La administración se reserva el derecho de expulsar a cualquier persona para proteger el ambiente del servidor. Las apelaciones de bans injustos se pueden gestionar en nuestro <a href="https://discord.gg/4uAK7mzXKp" target="_blank" rel="noopener">Discord</a>.',
+      rules_foot: "NEXUS RANKING — POLÍTICA DEL SERVIDOR"
+    },
+    pt: {
+      back: "Voltar Ao Menu",
+      code: "PT-BR",
+      rules_title_highlight: "Regras PvP da Nexus",
+      rules_subtitle: "Leia-as completamente antes de jogar — elas se aplicam sem exceção",
+      rule1_heading: "Padrões Gerais e Comportamento",
+      rule1_text: 'O cumprimento das políticas oficiais da plataforma de jogo e das normas do servidor é obrigatório. Tolerância zero para <span class="bad">toxicidade</span>, <span class="bad">discurso de ódio</span>, <span class="bad">assédio</span>, <span class="bad">conteúdo NSFW</span> ou <span class="bad">nomes de usuário/avatares ofensivos</span>.',
+      rule2_heading: "FFA Puro e Sem Times",
+      rule2_text: 'Este é um ambiente todos contra todos. <span class="bad">Teaming</span>, <span class="bad">boosting</span> ou qualquer forma de <span class="bad">colaboração injusta</span> é proibido.',
+      rule3_heading: "Zero Exploits",
+      rule3_text: 'Usar <span class="bad">cheats</span>, <span class="bad">macros</span>, <span class="bad">software de terceiros</span> ou <span class="bad">abusar de bugs/glitches do mapa</span> resulta em banimento instantâneo.',
+      rule4_heading: "Disciplina de Microfone e Chat",
+      rule4_text: 'Não é permitido <span class="bad">spam de microfone</span>, <span class="bad">flood no chat</span>, <span class="bad">trollagem excessiva</span> ou <span class="bad">atrapalhar partidas intencionalmente</span>.',
+      rule5_heading: "Cumprimento das Ordens do Staff",
+      rule5_text: "Instruções diretas da administração devem ser seguidas imediatamente.",
+      note_text: '<b>Nota:</b> A administração se reserva o direito de remover qualquer pessoa para proteger o ambiente do servidor. Recursos contra banimentos injustos podem ser tratados em nosso <a href="https://discord.gg/4uAK7mzXKp" target="_blank" rel="noopener">Discord</a>.',
+      rules_foot: "NEXUS RANKING — POLÍTICA DO SERVIDOR"
+    },
+    pl: {
+      back: "Powrót Do Menu",
+      code: "PL",
+      rules_title_highlight: "Zasady PvP Nexus",
+      rules_subtitle: "Przeczytaj je w całości przed grą — obowiązują bez wyjątku",
+      rule1_heading: "Ogólne Standardy i Zachowanie",
+      rule1_text: 'Przestrzeganie oficjalnych zasad platformy gry oraz regulaminu serwera jest obowiązkowe. Zero tolerancji dla <span class="bad">toksyczności</span>, <span class="bad">mowy nienawiści</span>, <span class="bad">nękania</span>, <span class="bad">treści NSFW</span> lub <span class="bad">obraźliwych nazw użytkownika/awatarów</span>.',
+      rule2_heading: "Czysty FFA i Bez Drużyn",
+      rule2_text: 'To środowisko każdy na własną rękę. <span class="bad">Teaming</span>, <span class="bad">boosting</span> lub jakakolwiek forma <span class="bad">nieuczciwej współpracy</span> jest zabroniona.',
+      rule3_heading: "Zero Exploitów",
+      rule3_text: 'Używanie <span class="bad">cheatów</span>, <span class="bad">makr</span>, <span class="bad">oprogramowania firm trzecich</span> lub <span class="bad">nadużywanie bugów/glitchy mapy</span> oznacza natychmiastowego bana.',
+      rule4_heading: "Dyscyplina Mikrofonu i Czatu",
+      rule4_text: 'Zakaz <span class="bad">spamowania mikrofonem</span>, <span class="bad">zaśmiecania czatu</span>, <span class="bad">nadmiernego trollowania</span> lub <span class="bad">celowego zakłócania rozgrywek</span>.',
+      rule5_heading: "Podporządkowanie się Staffowi",
+      rule5_text: "Bezpośrednie polecenia administracji muszą być natychmiast wykonywane.",
+      note_text: '<b>Uwaga:</b> Administracja zastrzega sobie prawo do usunięcia dowolnej osoby w celu ochrony środowiska serwera. Odwołania od niesłusznych banów można składać na naszym <a href="https://discord.gg/4uAK7mzXKp" target="_blank" rel="noopener">Discordzie</a>.',
+      rules_foot: "NEXUS RANKING — REGULAMIN SERWERA"
+    }
+  };
+
+  function setLang(lang){
+    const dict = I18N[lang];
+    if (!dict) return;
+
+    const label = document.getElementById("menu-back-label");
+    if (label) label.textContent = dict.back;
+
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      if (dict[key] != null) el.textContent = dict[key];
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach(el => {
+      const key = el.getAttribute("data-i18n-html");
+      if (dict[key] != null) el.innerHTML = dict[key];
+    });
+
+    document.getElementById("lang-current-code").textContent = dict.code;
+    document.querySelectorAll(".lang-option").forEach(o => {
+      o.classList.toggle("is-selected", o.dataset.lang === lang);
+    });
+    document.getElementById("lang-select").classList.remove("is-open");
+
+    currentProfileLang = lang;
+    if (currentProfileData) renderProfile(currentProfileData);
+  }
+
+  function toggleLangMenu(){
+    document.getElementById("lang-select").classList.toggle("is-open");
+  }
+
+  document.addEventListener("click", (e) => {
+    const wrap = document.getElementById("lang-select");
+    if (wrap && !wrap.contains(e.target)) wrap.classList.remove("is-open");
+
+    const chip = document.getElementById("profile-chip");
+    if (chip && !chip.contains(e.target)) chip.classList.remove("is-open");
+  });
+
+  /* ============ PROFILE CHIP (nombre + foto de Steam) ============ */
+
+  const GATE_STORAGE_KEY = "nexus_gate_steamid";
+  const PROFILE_STORAGE_KEY = "nexus_gate_profile";
+
+  // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
+  // { name, avatarUrl, nationality, verified, kills, deaths, kd }
+  const PROFILE_ENDPOINT = "https://TU-BACKEND-AQUI.com/api/profile";
+
+  let currentProfileData = null;
+  let currentProfileLang = "en";
+
+  const PROFILE_I18N = {
+    en:{ pending:"In Progress", verified:"Verified", nationality:"Nationality", kills:"Kills", deaths:"Deaths", kd:"K/D Ratio" },
+    es:{ pending:"En Progreso", verified:"Verificado", nationality:"Nacionalidad", kills:"Kills", deaths:"Deaths", kd:"K/D Ratio" },
+    pt:{ pending:"Em Andamento", verified:"Verificado", nationality:"Nacionalidade", kills:"Kills", deaths:"Deaths", kd:"K/D Ratio" },
+    pl:{ pending:"W Trakcie", verified:"Zweryfikowany", nationality:"Narodowość", kills:"Kills", deaths:"Deaths", kd:"K/D Ratio" }
+  };
+
+  function showProfileChip(steamId64){
+    document.getElementById("profile-chip").classList.add("is-visible");
+
+    let cached = null;
+    try {
+      const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (raw) cached = JSON.parse(raw);
+    } catch (err) {}
+
+    if (cached && cached.steamId64 === steamId64){
+      renderProfile(cached);
+    } else {
+      renderProfile({
+        steamId64: steamId64,
+        name: "Jugador " + steamId64.slice(-4),
+        avatarUrl: "nexus-logo.png",
+        nationality: "—",
+        verified: false,
+        kills: "—",
+        deaths: "—",
+        kd: "—"
+      });
+    }
+
+    loadProfileData(steamId64);
+  }
+
+  async function loadProfileData(steamId64){
+    try {
+      const res = await fetch(PROFILE_ENDPOINT + "?steamId64=" + encodeURIComponent(steamId64));
+      if (!res.ok) throw new Error("bad response");
+      const data = await res.json();
+      data.steamId64 = steamId64;
+      renderProfile(data);
+      try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data)); } catch (err) {}
+    } catch (err) {
+      // Todavía no configuraste PROFILE_ENDPOINT: se queda con el placeholder / último dato cacheado.
+      console.warn("No se pudo cargar el perfil desde el backend:", err);
+    }
+  }
+
+  function renderProfile(data){
+    currentProfileData = data;
+    const dict = PROFILE_I18N[currentProfileLang] || PROFILE_I18N.en;
+
+    document.getElementById("profile-name").textContent = data.name || "—";
+    document.getElementById("profile-avatar").src = data.avatarUrl || "nexus-logo.png";
+    document.getElementById("profile-panel-name").textContent = data.name || "—";
+    document.getElementById("profile-panel-avatar").src = data.avatarUrl || "nexus-logo.png";
+    document.getElementById("profile-nationality").textContent = data.nationality || "—";
+    document.getElementById("profile-kills").textContent = (data.kills ?? "—");
+    document.getElementById("profile-deaths").textContent = (data.deaths ?? "—");
+    document.getElementById("profile-kd").textContent = (data.kd ?? "—");
+
+    document.getElementById("profile-nat-label").textContent = dict.nationality;
+    document.getElementById("profile-kills-label").textContent = dict.kills;
+    document.getElementById("profile-deaths-label").textContent = dict.deaths;
+    document.getElementById("profile-kd-label").textContent = dict.kd;
+
+    const dot = document.getElementById("profile-dot");
+    const badge = document.getElementById("profile-status-badge");
+
+    if (data.verified){
+      dot.classList.add("is-verified");
+      badge.classList.add("is-verified");
+      badge.textContent = dict.verified;
+    } else {
+      dot.classList.remove("is-verified");
+      badge.classList.remove("is-verified");
+      badge.textContent = dict.pending;
+    }
+  }
+
+  function toggleProfilePanel(e){
+    if (e) e.stopPropagation();
+    document.getElementById("profile-chip").classList.toggle("is-open");
+  }
+
+  (function checkProfileOnLoad(){
+    try {
+      const savedId = localStorage.getItem(GATE_STORAGE_KEY);
+      if (savedId) showProfileChip(savedId);
+    } catch (err) {}
+  })();
+</script>
+
+</body>
+</html>

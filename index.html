@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS // MENU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:      #0a0b10;
+    --bg-panel:     #12141b;
+    --bg-panel-2:   #171a22;
+    --line:         #22242c;
+    --line-soft:    #1b1d25;
+    --text-hi:      #f4f4f5;
+    --text-mid:     #a7abb5;
+    --text-low:     #63676f;
+    --blue:         #2320d5;
+    --blue-2:       #1852e1;
+    --cyan:         #02c1fc;
+    --amber:        #ffd8a8;
+    --red:          #ff4d5e;
+    --green:        #3ddc84;
+    --discord:      #5865F2;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    min-height:100%;
+    background: var(--bg-void);
+    color: var(--text-hi);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  a{ text-decoration:none; color:inherit; }
+
+  body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    padding: 90px 20px 60px;
+  }
+
+  /* ---------- ambient background ---------- */
+
+  .bg-glow{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(35,32,213,0.20), transparent 42%),
+      radial-gradient(circle at 85% 15%, rgba(2,193,252,0.14), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(35,32,213,0.12), transparent 45%);
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%   { transform: scale(1) translate(0,0); }
+    100% { transform: scale(1.08) translate(-1%, 1%); }
+  }
+
+  .bg-grid{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    opacity:0.35;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%);
+  }
+
+  .scan{
+    position:fixed;
+    left:0; right:0;
+    height:2px;
+    z-index:1;
+    background: linear-gradient(90deg, transparent, rgba(2,193,252,0.55), transparent);
+    animation: scan 6s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes scan{
+    0%{ top:-2%; opacity:0; }
+    8%{ opacity:1; }
+    50%{ opacity:0.6; }
+    92%{ opacity:0; }
+    100%{ top:102%; opacity:0; }
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform: translateY(10px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  /* ---------- top-left brand label ---------- */
+
+  .top-brand{
+    position: fixed;
+    top: 22px;
+    left: 22px;
+    z-index: 30;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--text-hi);
+    border: 1px solid var(--line);
+    padding: 9px 14px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+  }
+  .top-brand .accent{
+    background: linear-gradient(90deg, var(--blue-2), var(--cyan));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  .brand-logo{
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    display: block;
+  }
+
+  /* ---------- top-right bar (profile + language selector) ---------- */
+
+  .topbar-right{
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ---------- profile chip ---------- */
+
+  .profile-chip{
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 6px 12px 6px 6px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+    cursor: pointer;
+    position: relative;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .profile-chip.is-visible{ display:flex; }
+  .profile-chip:hover{ color: var(--text-hi); border-color: var(--cyan); background: var(--bg-panel-2); }
+
+  .profile-avatar{
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    background: linear-gradient(150deg, var(--blue), var(--cyan));
+  }
+  .profile-name{
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-hi);
+    font-weight: 600;
+  }
+  .profile-dot{
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    background: var(--amber);
+  }
+  .profile-dot.is-verified{ background: var(--green); }
+
+  .profile-panel{
+    position:absolute;
+    top: calc(100% + 8px);
+    right:0;
+    width: 260px;
+    max-width: calc(100vw - 44px);
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow:hidden;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+    opacity:0;
+    transform: translateY(-6px);
+    pointer-events:none;
+    transition: opacity .15s ease, transform .15s ease;
+    cursor: default;
+  }
+  .profile-chip.is-open .profile-panel{
+    opacity:1;
+    transform: translateY(0);
+    pointer-events:auto;
+  }
+
+  .profile-panel-head{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 16px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    background: linear-gradient(135deg, rgba(35,32,213,0.14), rgba(2,193,252,0.08));
+  }
+  .profile-panel-avatar{
+    width: 44px; height: 44px;
+    border-radius: 9px;
+    object-fit: cover;
+    flex: 0 0 auto;
+    background: linear-gradient(150deg, var(--blue), var(--cyan));
+  }
+  .profile-panel-name{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 16.5px;
+    color: var(--text-hi);
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width: 150px;
+  }
+  .profile-status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap: 5px;
+    margin-top: 3px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight:600;
+    letter-spacing:.4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(255,216,168,0.14);
+    color: var(--amber);
+    border: 1px solid rgba(255,216,168,0.35);
+  }
+  .profile-status-badge.is-verified{
+    background: rgba(61,220,132,0.14);
+    color: var(--green);
+    border-color: rgba(61,220,132,0.35);
+  }
+
+  .profile-panel-body{
+    padding: 14px 16px 16px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .profile-tile{
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 8px;
+    padding: 9px 11px;
+  }
+  .profile-tile.span-2{ grid-column: 1 / -1; }
+  .profile-tile .profile-tile-label{
+    font-family:'Rajdhani', sans-serif;
+    font-size: 10.5px;
+    font-weight:600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-low);
+    margin-bottom: 4px;
+  }
+  .profile-tile .profile-tile-value{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight:600;
+    color: var(--text-hi);
+  }
+  .profile-tile.accent .profile-tile-value{ color: var(--cyan); }
+
+  /* ---------- language selector ---------- */
+
+  .lang-select{
+    position: relative;
+    z-index: 1100;
+  }
+
+  .lang-btn{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight:500;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 6px 12px 6px 6px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .lang-btn:hover{ color: var(--text-hi); border-color: var(--cyan); background: var(--bg-panel-2); }
+  .lang-logo{
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex: 0 0 auto;
+  }
+  .lang-caret{ font-size: 10px; color: var(--text-low); transition: transform .15s ease; }
+  .lang-select.is-open .lang-caret{ transform: rotate(180deg); }
+
+  .lang-menu{
+    position:absolute;
+    top: calc(100% + 8px);
+    right:0;
+    min-width: 150px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    overflow:hidden;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+    opacity:0;
+    transform: translateY(-6px);
+    pointer-events:none;
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .lang-select.is-open .lang-menu{
+    opacity:1;
+    transform: translateY(0);
+    pointer-events:auto;
+  }
+
+  .lang-option{
+    display:flex;
+    align-items:center;
+    gap: 9px;
+    padding: 10px 13px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:600;
+    font-size: 14px;
+    color: var(--text-mid);
+    cursor:pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .lang-option:hover{ background: var(--bg-panel-2); color: var(--text-hi); }
+  .lang-option.is-selected{ color: var(--cyan); }
+  .lang-flag{ font-size: 15px; }
+
+  /* ---------- shell ---------- */
+
+  .shell{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width: 900px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+
+  /* ---------- brand / hero ---------- */
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-low);
+    text-transform:uppercase;
+    opacity:0;
+    animation: fadeUp .6s ease forwards;
+    animation-delay: .05s;
+  }
+
+  .brand-hero{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:14px;
+    margin: 14px 0 6px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:800;
+    font-size: clamp(42px, 8vw, 72px);
+    letter-spacing: 1px;
+  }
+
+  .brand-hero .letter{
+    display:inline-block;
+    opacity:0;
+    transform: translateY(18px);
+    animation: letterIn .55s cubic-bezier(.2,.8,.2,1) forwards;
+    text-shadow: 0 0 26px rgba(2,193,252,0.25);
+  }
+  .brand-hero .letter:nth-child(1){ color:#2320d5; animation-delay:.10s; }
+  .brand-hero .letter:nth-child(2){ color:#1c3edc; animation-delay:.16s; }
+  .brand-hero .letter:nth-child(3){ color:#1852e1; animation-delay:.22s; }
+  .brand-hero .letter:nth-child(4){ color:#0e85ed; animation-delay:.28s; }
+  .brand-hero .letter:nth-child(5){ color:#02c1fc; animation-delay:.34s; }
+
+  @keyframes letterIn{
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .brand-hero small{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:600;
+    font-size: clamp(16px, 2.6vw, 22px);
+    letter-spacing: 3px;
+    color: var(--text-mid);
+    opacity:0;
+    animation: fadeUp .6s ease forwards;
+    animation-delay: .42s;
+  }
+
+  .tagline{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-low);
+    margin: 10px 0 40px;
+    opacity:0;
+    animation: fadeUp .6s ease forwards;
+    animation-delay: .5s;
+  }
+
+  /* ---------- menu cards (Rankings / Reglas) ---------- */
+
+  .menu-grid{
+    width:100%;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 560px){
+    .menu-grid, .live-grid{ grid-template-columns: 1fr; }
+  }
+
+  .menu-card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap: 10px;
+    text-align:left;
+    padding: 26px 24px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--bg-panel);
+    overflow:hidden;
+    opacity:0;
+    transform: translateY(16px);
+    animation: fadeUp .55s ease forwards;
+    transition: border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .menu-card:nth-child(1){ animation-delay: .58s; }
+  .menu-card:nth-child(2){ animation-delay: .66s; }
+
+  .menu-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(135deg, rgba(35,32,213,0.14), rgba(2,193,252,0.08));
+    opacity:0;
+    transition: opacity .2s ease;
+  }
+
+  .menu-card:hover{
+    border-color: var(--cyan);
+    background: var(--bg-panel-2);
+    transform: translateY(-3px);
+  }
+  .menu-card:hover::before{ opacity:1; }
+
+  .menu-card-icon{
+    width: 42px; height:42px;
+    border-radius: 9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(150deg, var(--blue), var(--cyan));
+    font-size: 19px;
+    position:relative;
+    z-index:1;
+  }
+
+  .menu-card-title{
+    position:relative;
+    z-index:1;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 20px;
+    letter-spacing: 0.3px;
+    color: var(--text-hi);
+  }
+
+  .menu-card-desc{
+    position:relative;
+    z-index:1;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-mid);
+  }
+
+  .menu-card-cta{
+    position:relative;
+    z-index:1;
+    margin-top: 6px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.6px;
+    color: var(--cyan);
+    display:flex;
+    align-items:center;
+    gap: 6px;
+  }
+  .menu-card:hover .menu-card-cta .arrow{ transform: translateX(3px); }
+  .menu-card-cta .arrow{ transition: transform .2s ease; }
+
+  /* ---------- live servers section ---------- */
+
+  .live-section{
+    width:100%;
+    margin-top: 46px;
+    opacity:0;
+    transform: translateY(16px);
+    animation: fadeUp .55s ease forwards;
+    animation-delay: .74s;
+  }
+
+  .live-section-head{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 4px;
+    margin-bottom: 18px;
+  }
+
+  .live-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 18px;
+    letter-spacing: 0.6px;
+    color: var(--text-hi);
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+
+  .live-title .pulse{
+    width: 8px; height:8px;
+    border-radius:50%;
+    background: var(--green);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(61,220,132,0.55); }
+    70%{ box-shadow: 0 0 0 8px rgba(61,220,132,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(61,220,132,0); }
+  }
+
+  .live-sub{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-low);
+  }
+
+  .live-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .live-card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+    text-align:left;
+    padding: 22px 22px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--bg-panel);
+    overflow:hidden;
+    transition: border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .live-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(135deg, rgba(2,193,252,0.10), rgba(35,32,213,0.06));
+    opacity:0;
+    transition: opacity .2s ease;
+  }
+  .live-card:hover{
+    border-color: var(--cyan);
+    background: var(--bg-panel-2);
+    transform: translateY(-3px);
+  }
+  .live-card:hover::before{ opacity:1; }
+
+  .live-card-top{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+  }
+
+  .live-card-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 17px;
+    color: var(--text-hi);
+  }
+
+  .live-badge{
+    display:flex;
+    align-items:center;
+    gap: 6px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-low);
+    border: 1px solid var(--line-soft);
+    background: var(--bg-panel-2);
+    padding: 4px 9px;
+    border-radius: 20px;
+  }
+
+  .players-count{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:baseline;
+    gap: 6px;
+  }
+  .players-count .num{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:600;
+    font-size: 22px;
+    color: var(--cyan);
+  }
+  .players-count .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-low);
+  }
+
+  .live-card-cta{
+    position:relative;
+    z-index:1;
+    margin-top: 2px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.6px;
+    color: var(--cyan);
+    display:flex;
+    align-items:center;
+    gap: 6px;
+  }
+  .live-card:hover .live-card-cta .arrow{ transform: translateX(3px); }
+  .live-card-cta .arrow{ transition: transform .2s ease; }
+
+  .server-tag{
+    margin-top: 34px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 8px 14px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+    opacity:0;
+    animation: fadeUp .6s ease forwards;
+    animation-delay: .84s;
+  }
+  .server-tag b{ color: var(--amber); font-weight:600; }
+
+  /* ---------- discord section ---------- */
+
+  .discord-section{
+    width:100%;
+    margin-top: 30px;
+    opacity:0;
+    transform: translateY(16px);
+    animation: fadeUp .55s ease forwards;
+    animation-delay: .80s;
+  }
+
+  .discord-card{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 18px;
+    text-align:left;
+    padding: 24px 28px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: linear-gradient(120deg, rgba(88,101,242,0.14), rgba(88,101,242,0.03));
+    overflow:hidden;
+    transition: border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .discord-card:hover{
+    border-color: var(--discord);
+    transform: translateY(-3px);
+  }
+  @media (max-width: 560px){
+    .discord-card{ flex-direction:column; align-items:flex-start; }
+  }
+
+  .discord-card-left{
+    display:flex;
+    align-items:center;
+    gap: 16px;
+  }
+
+  .discord-icon{
+    width: 46px; height:46px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: var(--discord);
+    overflow: hidden;
+  }
+  .discord-icon img{ width: 100%; height:100%; object-fit: cover; display:block; }
+
+  .discord-card-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 18px;
+    color: var(--text-hi);
+  }
+
+  .discord-card-desc{
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-top: 2px;
+  }
+
+  .discord-card-btn{
+    flex: 0 0 auto;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 14px;
+    letter-spacing: 0.4px;
+    color: #fff;
+    background: var(--discord);
+    padding: 12px 22px;
+    border-radius: 9px;
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .discord-card-btn:hover{ filter: brightness(1.12); transform: translateY(-1px); }
+
+  /* ---------- footer ---------- */
+
+  .site-footer{
+    width:100%;
+    margin-top: 40px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 6px;
+    opacity:0;
+    animation: fadeUp .6s ease forwards;
+    animation-delay: .9s;
+  }
+
+  .footer-owners{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-mid);
+    letter-spacing: 0.4px;
+  }
+  .footer-owners b{ color: var(--cyan); font-weight:600; }
+
+  .footer-copy{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-low);
+  }
+
+  /* ---------- REGISTER GATE ---------- */
+
+  .gate-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    background: rgba(6,7,11,0.86);
+    backdrop-filter: blur(6px);
+  }
+  .gate-overlay.is-hidden{ display:none; }
+
+  .gate-card{
+    width:100%;
+    max-width: 420px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow:hidden;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+  }
+
+  .gate-head{
+    padding: 22px 26px 16px;
+    text-align:center;
+    border-bottom: 1px solid var(--line-soft);
+    background: linear-gradient(135deg, rgba(35,32,213,0.14), rgba(2,193,252,0.06));
+  }
+
+  .gate-logo{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:2px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:800;
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .gate-logo span:nth-child(1){ color:#2320d5; }
+  .gate-logo span:nth-child(2){ color:#1c3edc; }
+  .gate-logo span:nth-child(3){ color:#1852e1; }
+  .gate-logo span:nth-child(4){ color:#0e85ed; }
+  .gate-logo span:nth-child(5){ color:#02c1fc; }
+
+  .gate-subtitle{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-low);
+  }
+
+  .gate-body{ padding: 22px 26px 26px; }
+
+  .gate-field{ margin-bottom: 14px; }
+  .gate-label{
+    display:block;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+  .gate-input{
+    width:100%;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text-hi);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    padding: 11px 13px;
+    transition: border-color .15s ease;
+  }
+  .gate-input:focus{ outline:none; border-color: var(--cyan); }
+  .gate-input::placeholder{ color: var(--text-low); }
+
+  .gate-error{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--red);
+    min-height: 16px;
+    margin-top: -4px;
+    margin-bottom: 8px;
+  }
+
+  .gate-submit{
+    width:100%;
+    margin-top: 6px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 15px;
+    letter-spacing: 0.4px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border: none;
+    border-radius: 9px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .gate-submit:hover{ filter: brightness(1.1); transform: translateY(-1px); }
+  .gate-submit:disabled{ opacity:0.6; cursor:not-allowed; transform:none; filter:none; }
+
+  .gate-note{
+    margin-top: 14px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height:1.5;
+    color: var(--text-low);
+    text-align:center;
+  }
+
+  /* pending / waiting step */
+
+  .gate-pending{ display:none; padding: 30px 26px 30px; text-align:center; }
+  .gate-pending.is-active{ display:block; }
+  .gate-form.is-hidden{ display:none; }
+
+  .gate-pending-icon{
+    width: 54px; height:54px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(255,216,168,0.14);
+    border: 1px solid rgba(255,216,168,0.35);
+    font-size: 24px;
+  }
+
+  .gate-pending-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 20px;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  .gate-pending-text{
+    font-size: 13.5px;
+    line-height:1.6;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+
+  .gate-pending-id{
+    display:inline-block;
+    margin-top: 10px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+
+  .gate-continue{
+    width:100%;
+    margin-top: 20px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 14px;
+    letter-spacing: 0.4px;
+    color: var(--text-hi);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .gate-continue:hover{ border-color: var(--cyan); color: var(--cyan); }
+</style>
+</head>
+<body>
+
+  <!-- ================= REGISTER GATE ================= -->
+  <div class="gate-overlay" id="gate-overlay">
+    <div class="gate-card">
+
+      <div class="gate-head">
+        <div class="gate-logo">
+          <span>N</span><span>E</span><span>X</span><span>U</span><span>S</span>
+        </div>
+        <div class="gate-subtitle" id="gate-subtitle" data-i18n="gate_subtitle">Verificá tu cuenta para continuar</div>
+      </div>
+
+      <!-- ---------- STEP 1: FORM ---------- -->
+      <form class="gate-body gate-form" id="gate-form" onsubmit="return handleGateSubmit(event)">
+        <div class="gate-field">
+          <label class="gate-label" for="gate-steamid" data-i18n="gate_steamid_label">SteamID64</label>
+          <input class="gate-input" type="text" id="gate-steamid" placeholder="7656119XXXXXXXXXX" inputmode="numeric" autocomplete="off" required>
+        </div>
+
+        <div class="gate-field">
+          <label class="gate-label" for="gate-password" data-i18n="gate_password_label">Contraseña</label>
+          <input class="gate-input" type="password" id="gate-password" data-i18n-ph="gate_password_ph" placeholder="Elegí una contraseña" autocomplete="new-password" required>
+        </div>
+
+        <div class="gate-error" id="gate-error"></div>
+
+        <button class="gate-submit" type="submit" id="gate-submit-btn" data-i18n="gate_submit_btn">REGISTRARME</button>
+
+        <div class="gate-note" data-i18n="gate_note">
+          Esta contraseña es solo para tu cuenta en NEXUS,<br> no es tu contraseña de Steam.
+        </div>
+      </form>
+
+      <!-- ---------- STEP 2: PENDING CONFIRMATION ---------- -->
+      <div class="gate-pending" id="gate-pending">
+        <div class="gate-pending-icon">⏳</div>
+        <div class="gate-pending-title" data-i18n="gate_pending_title">¡Ahora Espera!</div>
+        <div class="gate-pending-text" data-i18n="gate_pending_text">
+          El STAFF va a confirmar que sos el verdadero tutor de esta cuenta antes de darte acceso completo.
+        </div>
+        <div class="gate-pending-id" id="gate-pending-id">SteamID64: —</div>
+        <button class="gate-continue" type="button" onclick="dismissGate()" data-i18n="gate_continue_btn">Entendido, continuar</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+  <div class="scan"></div>
+
+  <!-- ================= TOP-LEFT BRAND ================= -->
+  <div class="top-brand"><img class="brand-logo" src="nexus-logo.png" alt="Nexus"><span>NEXU<span class="accent">S</span>: SERVERS</span></div>
+
+  <!-- ================= TOP-RIGHT BAR: PROFILE + LANGUAGE SELECTOR ================= -->
+  <div class="topbar-right" id="topbar-right">
+
+    <!-- ---------- PROFILE CHIP (visible once registered) ---------- -->
+    <div class="profile-chip" id="profile-chip" onclick="toggleProfilePanel(event)">
+      <img class="profile-avatar" id="profile-avatar" src="nexus-logo.png" alt="">
+      <span class="profile-dot" id="profile-dot"></span>
+      <span class="profile-name" id="profile-name">—</span>
+
+      <div class="profile-panel" id="profile-panel" onclick="event.stopPropagation()">
+        <div class="profile-panel-head">
+          <img class="profile-panel-avatar" id="profile-panel-avatar" src="nexus-logo.png" alt="">
+          <div>
+            <div class="profile-panel-name" id="profile-panel-name">—</div>
+            <div class="profile-status-badge" id="profile-status-badge">En Progreso</div>
+          </div>
+        </div>
+        <div class="profile-panel-body">
+          <div class="profile-tile span-2">
+            <div class="profile-tile-label" data-i18n="profile_nationality_label">Nacionalidad</div>
+            <div class="profile-tile-value" id="profile-nationality">—</div>
+          </div>
+          <div class="profile-tile">
+            <div class="profile-tile-label" data-i18n="profile_kills_label">Kills</div>
+            <div class="profile-tile-value" id="profile-kills">—</div>
+          </div>
+          <div class="profile-tile">
+            <div class="profile-tile-label" data-i18n="profile_deaths_label">Deaths</div>
+            <div class="profile-tile-value" id="profile-deaths">—</div>
+          </div>
+          <div class="profile-tile accent span-2">
+            <div class="profile-tile-label" data-i18n="profile_kd_label">K/D Ratio</div>
+            <div class="profile-tile-value" id="profile-kd">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- LANGUAGE SELECTOR ---------- -->
+    <div class="lang-select" id="lang-select">
+      <button class="lang-btn" onclick="toggleLangMenu()">
+        <img class="lang-logo" src="nexus-logo.png" alt="Nexus">
+        <span id="lang-current-code">EN</span>
+        <span class="lang-caret">▾</span>
+      </button>
+      <div class="lang-menu" id="lang-menu">
+        <div class="lang-option is-selected" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
+        <div class="lang-option" data-lang="es" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span>Español</div>
+        <div class="lang-option" data-lang="pt" onclick="setLang('pt')"><span class="lang-flag">🇧🇷</span>Brazil</div>
+        <div class="lang-option" data-lang="pl" onclick="setLang('pl')"><span class="lang-flag">🇵🇱</span>Polaco</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="shell">
+    <div class="brand-hero">
+      <span class="letter">N</span><span class="letter">E</span><span class="letter">X</span><span class="letter">U</span><span class="letter">S</span>
+      <small>MENU</small>
+    </div>
+
+    <div class="tagline" data-i18n="tagline">Select a section to continue</div>
+
+    <div class="menu-grid">
+      <a class="menu-card" href="rankings.html">
+        <div class="menu-card-icon">🏆</div>
+        <div class="menu-card-title" data-i18n="card1_title">Rankings</div>
+        <div class="menu-card-desc" data-i18n="card1_desc">Region leaderboard, K/D and tier for every ladder player.</div>
+        <div class="menu-card-cta"><span data-i18n="card1_cta">VIEW RANKING</span> <span class="arrow">→</span></div>
+      </a>
+
+      <a class="menu-card" href="rules.html">
+        <div class="menu-card-icon">📜</div>
+        <div class="menu-card-title" data-i18n="card2_title">Rules</div>
+        <div class="menu-card-desc" data-i18n="card2_desc">Official rules of the SCP: Secret Laboratory Nexus PvP server.</div>
+        <div class="menu-card-cta"><span data-i18n="card2_cta">VIEW RULES</span> <span class="arrow">→</span></div>
+      </a>
+    </div>
+
+    <!-- ================= LIVE SERVERS (below Rankings / Rules) ================= -->
+    <div class="live-section">
+      <div class="live-section-head">
+        <div class="live-title"><span class="pulse"></span><span data-i18n="live_title">Live Servers</span></div>
+        <div class="live-sub" data-i18n="live_sub">Current round status for each region</div>
+      </div>
+
+      <div class="live-grid">
+        <a class="live-card" href="server-sa.html">
+          <div class="live-card-top">
+            <div class="live-card-title" data-i18n="sa_title">Server S.A. (South America)</div>
+            <div class="live-badge"><span class="pulse" style="width:6px;height:6px;"></span>LIVE</div>
+          </div>
+          <div class="players-count">
+            <span class="num">9/15</span>
+            <span class="label" data-i18n="active_label">Active players</span>
+          </div>
+          <div class="live-card-cta"><span data-i18n="view_leaderboard">View Leaderboard</span> <span class="arrow">→</span></div>
+        </a>
+
+        <a class="live-card" href="server-eu.html">
+          <div class="live-card-top">
+            <div class="live-card-title" data-i18n="eu_title">Server Europe</div>
+            <div class="live-badge"><span class="pulse" style="width:6px;height:6px;"></span>LIVE</div>
+          </div>
+          <div class="players-count">
+            <span class="num">7/15</span>
+            <span class="label" data-i18n="active_label">Active players</span>
+          </div>
+          <div class="live-card-cta"><span data-i18n="view_leaderboard">View Leaderboard</span> <span class="arrow">→</span></div>
+        </a>
+      </div>
+    </div>
+
+    <!-- ================= DISCORD ================= -->
+    <div class="discord-section">
+      <a class="discord-card" href="https://discord.gg/mHVx2qmXbg" target="_blank" rel="noopener">
+        <div class="discord-card-left">
+          <div class="discord-icon">
+            <img src="nexus-logo.png" alt="Nexus">
+          </div>
+          <div>
+            <div class="discord-card-title" data-i18n="discord_title">Join our Discord</div>
+            <div class="discord-card-desc" data-i18n="discord_desc">News, support and community for all Nexus servers.</div>
+          </div>
+        </div>
+        <div class="discord-card-btn"><span data-i18n="discord_cta">JOIN NOW</span> <span class="arrow">→</span></div>
+      </a>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <div class="site-footer">
+      <div class="footer-owners" data-i18n="footer_owners">Owners: <b>Holsky</b> and <b>Grinek</b></div>
+      <div class="footer-copy">© 2026 NEXUS Servers</div>
+    </div>
+
+  </div>
+
+<script>
+  /* ============ REGISTER GATE ============ */
+
+  // Reemplazá esto por tu backend real (o un webhook) que reciba el JSON y lo guarde/valide.
+  const REGISTER_ENDPOINT = "https://TU-BACKEND-AQUI.com/api/register";
+
+  const GATE_STORAGE_KEY = "nexus_gate_steamid"; // solo guardamos el SteamID64, nunca la contraseña
+
+  let currentGateLang = "es"; // se actualiza en setLang(); usado para mensajes dinámicos del gate
+
+  function isValidSteamId64(value){
+    return /^7656119\d{10}$/.test(value.trim());
+  }
+
+  function showGateError(msg){
+    document.getElementById("gate-error").textContent = msg;
+  }
+
+  async function handleGateSubmit(e){
+    e.preventDefault();
+    showGateError("");
+
+    const dict = I18N[currentGateLang] || I18N.es;
+    const steamId64 = document.getElementById("gate-steamid").value.trim();
+    const password = document.getElementById("gate-password").value;
+    const submitBtn = document.getElementById("gate-submit-btn");
+
+    if (!isValidSteamId64(steamId64)){
+      showGateError(dict.gate_err_steamid);
+      return false;
+    }
+    if (password.length < 6){
+      showGateError(dict.gate_err_password);
+      return false;
+    }
+
+    const payload = {
+      steamId64: steamId64,
+      password: password,
+      status: "pending_staff_review",
+      requestedAt: new Date().toISOString()
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = dict.gate_submit_sending;
+
+    try {
+      await fetch(REGISTER_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      // Si todavía no configuraste el backend, el registro sigue mostrando
+      // la pantalla de espera igual, pero no se está enviando a ningún lado.
+      console.warn("No se pudo enviar el registro al backend:", err);
+    }
+
+    try {
+      localStorage.setItem(GATE_STORAGE_KEY, steamId64);
+    } catch (err) {}
+
+    showProfileChip(steamId64);
+
+    document.getElementById("gate-form").classList.add("is-hidden");
+    document.getElementById("gate-pending").classList.add("is-active");
+    document.getElementById("gate-pending-id").textContent = "SteamID64: " + steamId64;
+    document.getElementById("gate-subtitle").textContent = "Registro enviado";
+
+    return false;
+  }
+
+  function dismissGate(){
+    document.getElementById("gate-overlay").classList.add("is-hidden");
+  }
+
+  (function checkGateOnLoad(){
+    try {
+      const savedId = localStorage.getItem(GATE_STORAGE_KEY);
+      if (savedId){
+        dismissGate();
+        showProfileChip(savedId);
+      }
+    } catch (err) {}
+  })();
+
+  /* ============ PROFILE CHIP (nombre + foto de Steam) ============ */
+
+  // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
+  // { name, avatarUrl, nationality, verified, kills, deaths, kd }
+  const PROFILE_ENDPOINT = "https://TU-BACKEND-AQUI.com/api/profile";
+
+  const PROFILE_STORAGE_KEY = "nexus_gate_profile"; // cache local de los datos de perfil ya cargados
+
+  let currentProfileData = null;
+
+  function showProfileChip(steamId64){
+    document.getElementById("profile-chip").classList.add("is-visible");
+
+    // Placeholder inmediato mientras se resuelve (o si no hay backend configurado)
+    let cached = null;
+    try {
+      const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (raw) cached = JSON.parse(raw);
+    } catch (err) {}
+
+    if (cached && cached.steamId64 === steamId64){
+      renderProfile(cached);
+    } else {
+      renderProfile({
+        steamId64: steamId64,
+        name: "Jugador " + steamId64.slice(-4),
+        avatarUrl: "nexus-logo.png",
+        nationality: "—",
+        verified: false,
+        kills: "—",
+        deaths: "—",
+        kd: "—"
+      });
+    }
+
+    loadProfileData(steamId64);
+  }
+
+  async function loadProfileData(steamId64){
+    try {
+      const res = await fetch(PROFILE_ENDPOINT + "?steamId64=" + encodeURIComponent(steamId64));
+      if (!res.ok) throw new Error("bad response");
+      const data = await res.json();
+      data.steamId64 = steamId64;
+      renderProfile(data);
+      try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data)); } catch (err) {}
+    } catch (err) {
+      // Todavía no configuraste PROFILE_ENDPOINT: se queda con el placeholder / último dato cacheado.
+      console.warn("No se pudo cargar el perfil desde el backend:", err);
+    }
+  }
+
+  function renderProfile(data){
+    currentProfileData = data;
+
+    document.getElementById("profile-name").textContent = data.name || "—";
+    document.getElementById("profile-avatar").src = data.avatarUrl || "nexus-logo.png";
+    document.getElementById("profile-panel-name").textContent = data.name || "—";
+    document.getElementById("profile-panel-avatar").src = data.avatarUrl || "nexus-logo.png";
+    document.getElementById("profile-nationality").textContent = data.nationality || "—";
+    document.getElementById("profile-kills").textContent = (data.kills ?? "—");
+    document.getElementById("profile-deaths").textContent = (data.deaths ?? "—");
+    document.getElementById("profile-kd").textContent = (data.kd ?? "—");
+
+    const dot = document.getElementById("profile-dot");
+    const badge = document.getElementById("profile-status-badge");
+    const dict = I18N[currentGateLang] || I18N.es;
+
+    if (data.verified){
+      dot.classList.add("is-verified");
+      badge.classList.add("is-verified");
+      badge.textContent = dict.profile_status_verified;
+    } else {
+      dot.classList.remove("is-verified");
+      badge.classList.remove("is-verified");
+      badge.textContent = dict.profile_status_pending;
+    }
+  }
+
+  function toggleProfilePanel(e){
+    if (e) e.stopPropagation();
+    document.getElementById("profile-chip").classList.toggle("is-open");
+  }
+
+  function closeProfilePanel(){
+    document.getElementById("profile-chip").classList.remove("is-open");
+  }
+
+  const I18N = {
+    en: {
+      eyebrow: "CRYSTAL NETWORK // COMPETITIVE PVP",
+      tagline: "Select a section to continue",
+      card1_title: "Rankings",
+      card1_desc: "Region leaderboard, K/D and tier for every ladder player.",
+      card1_cta: "VIEW RANKING",
+      card2_title: "Rules",
+      card2_desc: "Official rules of the SCP: Secret Laboratory Nexus PvP server.",
+      card2_cta: "VIEW RULES",
+      live_title: "Live Servers",
+      live_sub: "Current round status for each region",
+      sa_title: "Server S.A. (South America)",
+      eu_title: "Server Europe",
+      active_label: "Active players",
+      view_leaderboard: "View Leaderboard",
+      discord_title: "Join our Discord",
+      discord_desc: "News, support and community for all Nexus servers.",
+      discord_cta: "JOIN NOW",
+      footer_owners_text: "Owners: {b1}Holsky{/b1} and {b2}Grinek{/b2}",
+      gate_subtitle: "Verify your account to continue",
+      gate_steamid_label: "SteamID64",
+      gate_password_label: "Password",
+      gate_password_ph: "Choose a password",
+      gate_submit_btn: "REGISTER",
+      gate_note: "This password is only for your NEXUS account,<br> it is not your Steam password.",
+      gate_pending_title: "Now Wait!",
+      gate_pending_text: "STAFF will confirm you are the real owner of this account before granting full access.",
+      gate_continue_btn: "Got it, continue",
+      gate_submit_sending: "SENDING...",
+      gate_err_steamid: "Invalid SteamID64. It must have 17 digits (e.g. 76561198012345678).",
+      gate_err_password: "Password must be at least 6 characters long.",
+      profile_status_pending: "In Progress",
+      profile_status_verified: "Verified",
+      profile_nationality_label: "Nationality",
+      profile_kills_label: "Kills",
+      profile_deaths_label: "Deaths",
+      profile_kd_label: "K/D Ratio",
+      code: "EN", flag: "🇬🇧"
+    },
+    es: {
+      eyebrow: "CRYSTAL NETWORK // PVP COMPETITIVO",
+      tagline: "Selecciona una sección para continuar",
+      card1_title: "Rankings",
+      card1_desc: "Tabla de posiciones por región, K/D y tier de cada jugador de la ladder.",
+      card1_cta: "VER RANKING",
+      card2_title: "Reglas",
+      card2_desc: "Normas oficiales del servidor SCP: Secret Laboratory Nexus PvP.",
+      card2_cta: "VER REGLAS",
+      live_title: "Servidores En Vivo",
+      live_sub: "Estado de la ronda actual por región",
+      sa_title: "Server S.A. (South America)",
+      eu_title: "Server Europe",
+      active_label: "Jugadores activos",
+      view_leaderboard: "Ver Leaderboard",
+      discord_title: "Unite a nuestro Discord",
+      discord_desc: "Novedades, soporte y comunidad de todos los servidores Nexus.",
+      discord_cta: "UNIRME AHORA",
+      gate_subtitle: "Verificá tu cuenta para continuar",
+      gate_steamid_label: "SteamID64",
+      gate_password_label: "Contraseña",
+      gate_password_ph: "Elegí una contraseña",
+      gate_submit_btn: "REGISTRARME",
+      gate_note: "Esta contraseña es solo para tu cuenta en NEXUS,<br> no es tu contraseña de Steam.",
+      gate_pending_title: "¡Ahora Espera!",
+      gate_pending_text: "El STAFF va a confirmar que sos el verdadero tutor de esta cuenta antes de darte acceso completo.",
+      gate_continue_btn: "Entendido, continuar",
+      gate_submit_sending: "ENVIANDO...",
+      gate_err_steamid: "SteamID64 inválido. Debe tener 17 dígitos (ej: 76561198012345678).",
+      gate_err_password: "La contraseña debe tener al menos 6 caracteres.",
+      profile_status_pending: "En Progreso",
+      profile_status_verified: "Verificado",
+      profile_nationality_label: "Nacionalidad",
+      profile_kills_label: "Kills",
+      profile_deaths_label: "Deaths",
+      profile_kd_label: "K/D Ratio",
+      code: "ES", flag: "🇪🇸"
+    },
+    pt: {
+      eyebrow: "CRYSTAL NETWORK // PVP COMPETITIVO",
+      tagline: "Selecione uma seção para continuar",
+      card1_title: "Rankings",
+      card1_desc: "Tabela de classificação por região, K/D e tier de cada jogador da ladder.",
+      card1_cta: "VER RANKING",
+      card2_title: "Regras",
+      card2_desc: "Regras oficiais do servidor SCP: Secret Laboratory Nexus PvP.",
+      card2_cta: "VER REGRAS",
+      live_title: "Servidores Ao Vivo",
+      live_sub: "Status da rodada atual por região",
+      sa_title: "Server S.A. (South America)",
+      eu_title: "Server Europe",
+      active_label: "Jogadores ativos",
+      view_leaderboard: "Ver Leaderboard",
+      discord_title: "Entre no nosso Discord",
+      discord_desc: "Novidades, suporte e comunidade de todos os servidores Nexus.",
+      discord_cta: "ENTRAR AGORA",
+      gate_subtitle: "Verifique sua conta para continuar",
+      gate_steamid_label: "SteamID64",
+      gate_password_label: "Senha",
+      gate_password_ph: "Escolha uma senha",
+      gate_submit_btn: "REGISTRAR",
+      gate_note: "Esta senha é apenas para sua conta na NEXUS,<br> não é sua senha da Steam.",
+      gate_pending_title: "Agora Espere!",
+      gate_pending_text: "O STAFF vai confirmar que você é o verdadeiro dono desta conta antes de liberar o acesso completo.",
+      gate_continue_btn: "Entendi, continuar",
+      gate_submit_sending: "ENVIANDO...",
+      gate_err_steamid: "SteamID64 inválido. Deve ter 17 dígitos (ex: 76561198012345678).",
+      gate_err_password: "A senha deve ter pelo menos 6 caracteres.",
+      profile_status_pending: "Em Andamento",
+      profile_status_verified: "Verificado",
+      profile_nationality_label: "Nacionalidade",
+      profile_kills_label: "Kills",
+      profile_deaths_label: "Deaths",
+      profile_kd_label: "K/D Ratio",
+      code: "PT-BR", flag: "🇧🇷"
+    },
+    pl: {
+      eyebrow: "CRYSTAL NETWORK // PVP KONKURENCYJNE",
+      tagline: "Wybierz sekcję, aby kontynuować",
+      card1_title: "Ranking",
+      card1_desc: "Tabela regionalna, K/D i tier każdego gracza na drabince.",
+      card1_cta: "ZOBACZ RANKING",
+      card2_title: "Zasady",
+      card2_desc: "Oficjalne zasady serwera SCP: Secret Laboratory Nexus PvP.",
+      card2_cta: "ZOBACZ ZASADY",
+      live_title: "Serwery Na Żywo",
+      live_sub: "Status obecnej rundy w każdym regionie",
+      sa_title: "Server S.A. (South America)",
+      eu_title: "Server Europe",
+      active_label: "Aktywni gracze",
+      view_leaderboard: "Zobacz Leaderboard",
+      discord_title: "Dołącz do naszego Discorda",
+      discord_desc: "Nowości, wsparcie i społeczność wszystkich serwerów Nexus.",
+      discord_cta: "DOŁĄCZ TERAZ",
+      gate_subtitle: "Zweryfikuj swoje konto, aby kontynuować",
+      gate_steamid_label: "SteamID64",
+      gate_password_label: "Hasło",
+      gate_password_ph: "Wybierz hasło",
+      gate_submit_btn: "ZAREJESTRUJ SIĘ",
+      gate_note: "To hasło jest tylko do Twojego konta NEXUS,<br> to nie jest Twoje hasło Steam.",
+      gate_pending_title: "Teraz Poczekaj!",
+      gate_pending_text: "STAFF potwierdzi, że jesteś prawdziwym właścicielem tego konta, zanim otrzymasz pełny dostęp.",
+      gate_continue_btn: "Rozumiem, kontynuuj",
+      gate_submit_sending: "WYSYŁANIE...",
+      gate_err_steamid: "Nieprawidłowy SteamID64. Musi mieć 17 cyfr (np. 76561198012345678).",
+      gate_err_password: "Hasło musi mieć co najmniej 6 znaków.",
+      profile_status_pending: "W Trakcie",
+      profile_status_verified: "Zweryfikowany",
+      profile_nationality_label: "Narodowość",
+      profile_kills_label: "Kills",
+      profile_deaths_label: "Deaths",
+      profile_kd_label: "K/D Ratio",
+      code: "PL", flag: "🇵🇱"
+    }
+  };
+
+  function setLang(lang){
+    const dict = I18N[lang];
+    if (!dict) return;
+
+    currentGateLang = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      if (key === "footer_owners") return; // keeps Holsky/Grinek bold, not translated
+      if (!dict[key]) return;
+      if (key === "gate_note"){ el.innerHTML = dict[key]; }
+      else { el.textContent = dict[key]; }
+    });
+
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+      const key = el.getAttribute("data-i18n-ph");
+      if (dict[key]) el.placeholder = dict[key];
+    });
+
+    document.getElementById("lang-current-code").textContent = dict.code;
+
+    document.querySelectorAll(".lang-option").forEach(o => {
+      o.classList.toggle("is-selected", o.dataset.lang === lang);
+    });
+
+    document.getElementById("lang-select").classList.remove("is-open");
+
+    if (currentProfileData) renderProfile(currentProfileData);
+  }
+
+  function toggleLangMenu(){
+    document.getElementById("lang-select").classList.toggle("is-open");
+  }
+
+  document.addEventListener("click", (e) => {
+    const wrap = document.getElementById("lang-select");
+    if (!wrap.contains(e.target)) wrap.classList.remove("is-open");
+
+    const chip = document.getElementById("profile-chip");
+    if (!chip.contains(e.target)) chip.classList.remove("is-open");
+  });
+</script>
+
+</body>
+</html>
