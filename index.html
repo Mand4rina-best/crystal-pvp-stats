@@ -1803,23 +1803,38 @@
     const menuAdminBtn = document.getElementById("menu-admin-btn");
     let loggedIn = false;
     let isAdmin = false;
+    let isStaff = false;
     try {
       loggedIn = !!(localStorage.getItem(GATE_STORAGE_KEY) || localStorage.getItem(ADMIN_STORAGE_KEY));
       isAdmin = !!localStorage.getItem(ADMIN_STORAGE_KEY);
+      isStaff = !!localStorage.getItem(STAFF_STEAMID_KEY);
     } catch (err) {}
     if (btn) btn.style.display = loggedIn ? "none" : "";
-    if (menuAdminBtn) menuAdminBtn.style.display = isAdmin ? "flex" : "none";
-    if (isAdmin) refreshPendingBadge();
+    if (menuAdminBtn) menuAdminBtn.style.display = (isAdmin || isStaff) ? "flex" : "none";
+    if (isAdmin || isStaff) refreshPendingBadge();
+  }
+
+  // Devuelve el header correcto para llamar a /api/admin/*: el código
+  // maestro si entraste por "Administrador", o tu SteamID64 si tenés
+  // rol STAFF/ADMIN asignado por un administrador.
+  function adminApiHeaders(){
+    let adminKey = null, staffSteamId = null;
+    try {
+      adminKey = localStorage.getItem(ADMIN_KEY_STORAGE);
+      staffSteamId = localStorage.getItem(STAFF_STEAMID_KEY);
+    } catch (err) {}
+    if (adminKey) return { "x-admin-key": adminKey };
+    if (staffSteamId) return { "x-staff-steamid": staffSteamId };
+    return null;
   }
 
   async function refreshPendingBadge(){
     const badge = document.getElementById("menu-admin-badge");
     if (!badge) return;
-    let adminKey = null;
-    try { adminKey = localStorage.getItem(ADMIN_KEY_STORAGE); } catch (err) {}
-    if (!adminKey) return;
+    const headers = adminApiHeaders();
+    if (!headers) return;
     try {
-      const res = await fetch("/api/admin/players", { headers: { "x-admin-key": adminKey } });
+      const res = await fetch("/api/admin/players", { headers });
       if (!res.ok) return;
       const data = await res.json();
       const pending = (data.players || []).filter(p => !p.verified).length;
@@ -1837,6 +1852,7 @@
   const ADMIN_AUTH_CODE = "9912938414112";
   const ADMIN_STORAGE_KEY = "nexus_admin_identity"; // guarda quién de los administradores entró
   const ADMIN_KEY_STORAGE = "nexus_admin_key"; // guarda el código de auth para llamar a /api/admin/*
+  const STAFF_STEAMID_KEY = "nexus_staff_steamid"; // guarda el SteamID64 si el jugador tiene rol STAFF/ADMIN
 
   function openAdminGate(){
     document.getElementById("gate-overlay").classList.remove("is-hidden");
@@ -1981,6 +1997,15 @@
     } else {
       roleTile.style.display = "none";
     }
+
+    // Si el backend dice que este jugador tiene rol STAFF o ADMIN,
+    // le habilitamos el Menú Admin automáticamente (sin código maestro).
+    if ((data.role === "STAFF" || data.role === "ADMIN") && data.steamId64){
+      try { localStorage.setItem(STAFF_STEAMID_KEY, data.steamId64); } catch (err) {}
+    } else if (data.steamId64) {
+      try { localStorage.removeItem(STAFF_STEAMID_KEY); } catch (err) {}
+    }
+    updateAdminBtnVisibility();
 
     const dot = document.getElementById("profile-dot");
     const badge = document.getElementById("profile-status-badge");

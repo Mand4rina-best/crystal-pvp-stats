@@ -469,6 +469,7 @@
           </div>
           <div class="conv-head-actions">
             <button class="conv-btn verify" id="verify-btn" onclick="verifyCurrentPlayer()">✓ Verificar cuenta</button>
+            <button class="conv-btn verify" id="staff-btn" onclick="toggleStaffCurrentPlayer()" style="display:none;">★ Rol</button>
           </div>
         </div>
 
@@ -485,17 +486,21 @@
 <script>
   const ADMIN_KEY_STORAGE = "nexus_admin_key";
   const ADMIN_STORAGE_KEY = "nexus_admin_identity";
+  const STAFF_STEAMID_KEY = "nexus_staff_steamid"; // SteamID64 de un jugador con rol STAFF/ADMIN
+  const GATE_STORAGE_KEY = "nexus_gate_steamid";
 
   let adminKey = null;
   let adminName = null;
+  let staffSteamId = null;
   let allPlayers = [];
   let currentTab = "pending";
   let currentTicket = null;
+  let currentPlayerRole = "PLAYER";
   let listPoll = null;
   let convPoll = null;
 
   function apiHeaders(json){
-    const h = { "x-admin-key": adminKey };
+    const h = adminKey ? { "x-admin-key": adminKey } : { "x-staff-steamid": staffSteamId };
     if (json) h["Content-Type"] = "application/json";
     return h;
   }
@@ -504,16 +509,24 @@
     try {
       adminKey = localStorage.getItem(ADMIN_KEY_STORAGE);
       adminName = localStorage.getItem(ADMIN_STORAGE_KEY);
+      staffSteamId = localStorage.getItem(STAFF_STEAMID_KEY);
     } catch (err) {}
 
-    if (!adminKey || !adminName){
+    // Acceso válido: código maestro (adminKey + adminName), o SteamID64
+    // con rol STAFF/ADMIN asignado por un administrador.
+    const hasMasterAccess = !!(adminKey && adminName);
+    const hasStaffAccess = !!staffSteamId;
+
+    if (!hasMasterAccess && !hasStaffAccess){
       document.getElementById("lock-screen").classList.remove("is-hidden");
       return;
     }
 
+    if (!hasMasterAccess) adminKey = null; // fuerza a usar el header de staff
+
     document.getElementById("lock-screen").style.display = "none";
     document.getElementById("app").style.display = "flex";
-    document.getElementById("sidebar-identity").textContent = adminName;
+    document.getElementById("sidebar-identity").textContent = adminName || ("STAFF · " + staffSteamId);
 
     refreshChatList();
     listPoll = setInterval(refreshChatList, 6000);
@@ -523,7 +536,10 @@
     try {
       const res = await fetch("/api/admin/players", { headers: apiHeaders() });
       if (res.status === 401){
-        try { localStorage.removeItem(ADMIN_KEY_STORAGE); } catch (err) {}
+        try {
+          localStorage.removeItem(ADMIN_KEY_STORAGE);
+          localStorage.removeItem(STAFF_STEAMID_KEY);
+        } catch (err) {}
         document.getElementById("app").style.display = "none";
         document.getElementById("lock-screen").classList.remove("is-hidden");
         return;
@@ -639,6 +655,17 @@
       verifyBtn.disabled = p.verified;
       verifyBtn.textContent = p.verified ? "✓ Verificado" : "✓ Verificar cuenta";
 
+      // Asignar rol STAFF solo lo puede hacer el admin maestro (código),
+      // no otro STAFF, para evitar que se auto-asciendan entre ellos.
+      const staffBtn = document.getElementById("staff-btn");
+      currentPlayerRole = p.role || "PLAYER";
+      if (adminKey && p.verified){
+        staffBtn.style.display = "";
+        staffBtn.textContent = currentPlayerRole === "STAFF" ? "★ Quitar STAFF" : "★ Hacer STAFF";
+      } else {
+        staffBtn.style.display = "none";
+      }
+
       const box = document.getElementById("conv-messages");
       const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
       box.innerHTML = (p.messages || []).map(m => {
@@ -665,7 +692,7 @@
       await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/messages", {
         method: "POST",
         headers: apiHeaders(true),
-        body: JSON.stringify({ text, adminName })
+        body: JSON.stringify({ text, adminName: adminName || "STAFF" })
       });
       loadConversation();
       refreshChatList();
@@ -687,6 +714,30 @@
       refreshChatList();
     } catch (err) {
       console.warn("No se pudo verificar:", err);
+    }
+  }
+
+  async function toggleStaffCurrentPlayer(){
+    if (!currentTicket) return;
+    const nextRole = currentPlayerRole === "STAFF" ? "PLAYER" : "STAFF";
+    const msg = nextRole === "STAFF"
+      ? "¿Darle rol STAFF a este jugador? Va a poder entrar al Menú Admin."
+      : "¿Quitarle el rol STAFF a este jugador?";
+    if (!confirm(msg)) return;
+    try {
+      const res = await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/role", {
+        method: "POST",
+        headers: apiHeaders(true),
+        body: JSON.stringify({ role: nextRole })
+      });
+      if (!res.ok){
+        alert("No se pudo cambiar el rol (¿estás logueado con el código maestro?).");
+        return;
+      }
+      loadConversation();
+      refreshChatList();
+    } catch (err) {
+      console.warn("No se pudo cambiar el rol:", err);
     }
   }
 </script>
