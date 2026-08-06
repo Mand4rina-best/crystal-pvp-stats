@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
+const { MongoClient } = require('mongodb');
+
 const app = express();
 
 function env(name) {
@@ -14,48 +16,45 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 /* =========================================================
-   ALMACENAMIENTO DE JUGADORES / CHATS
-   Guardado en un JSON en disco para que sobreviva reinicios
-   del proceso (aunque en el free tier de Render el disco
-   puede resetearse en cada deploy — para algo más robusto,
-   migrar esto a una base de datos real como Postgres/SQLite).
+   CONEXIÓN A MONGODB ATLAS
+   Antes esto se guardaba en un archivo JSON en disco
+   (data/players.json), pero en el free tier de Render el
+   disco se resetea en cada deploy y se perdían todos los
+   jugadores verificados. Ahora se persiste en MongoDB Atlas,
+   que sobrevive a los redeploys.
 ========================================================= */
-const DATA_FILE = path.join(__dirname, "data", "players.json");
+const MONGODB_URI = env("MONGODB_URI");
+let playersCol = null;
 
-function loadPlayers() {
-  try {
-    const raw = fs.readFileSync(DATA_FILE, "utf8");
-    return JSON.parse(raw);
-  } catch (err) {
-    return {};
+async function connectDB() {
+  if (!MONGODB_URI) {
+    console.error("⚠️  Falta la variable de entorno MONGODB_URI. Configurala en Render → Environment.");
+    return;
   }
+  const client = new MongoClient(MONGODB_URI);
+  await client.connect();
+  const db = client.db(); // usa la base indicada en el connection string
+  playersCol = db.collection("players");
+  await playersCol.createIndex({ ticket: 1 }, { unique: true });
+  await playersCol.createIndex({ steamId64: 1 }, { unique: true });
+  console.log("✅ Conectado a MongoDB Atlas");
 }
-
-function savePlayers(players) {
-  try {
-    fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-    fs.writeFileSync(DATA_FILE, JSON.stringify(players, null, 2));
-  } catch (err) {
-    console.error("No se pudo guardar data/players.json:", err);
-  }
-}
-
-// players: { [ticket]: { ticket, steamId64, verified, name, nationality,
-//                         kills, deaths, kd, createdAt, messages: [{from, text, at}] } }
-let players = loadPlayers();
 
 function findByTicket(ticket) {
-  return players[ticket] || null;
+  return playersCol.findOne({ ticket });
 }
 
 function findBySteamId(steamId64) {
-  return Object.values(players).find(p => p.steamId64 === steamId64) || null;
+  return playersCol.findOne({ steamId64 });
 }
 
 /* =========================================================
-   AUTENTICACIÓN DE ADMIN (simple, header x-admin-key)
-   Reutiliza el mismo código que ya usa el panel en el front-end.
-   Podés sobreescribirlo con la variable de entorno ADMIN_AUTH_CODE.
+   AUTENTICACIÓN DE ADMIN / STAFF
+   - x-admin-key: código maestro (ADMIN_AUTH_CODE), acceso total.
+   - x-staff-steamid: SteamID64 de un jugador verificado cuyo
+     "role" en la base de datos sea STAFF o ADMIN. Así, cualquier
+     jugador al que le den ese rol puede entrar al Menú Admin
+     sin necesitar el código maestro.
 ========================================================= */
 const ADMIN_AUTH_CODE = env("ADMIN_AUTH_CODE") || "9912938414112";
 
@@ -65,6 +64,24 @@ function requireAdmin(req, res, next) {
     return res.status(401).json({ error: "No autorizado" });
   }
   next();
+}
+
+async function requireStaff(req, res, next) {
+  const key = req.header("x-admin-key");
+  if (key === ADMIN_AUTH_CODE) return next();
+
+  const staffSteamId = req.header("x-staff-steamid");
+  if (staffSteamId) {
+    try {
+      const player = await findBySteamId(staffSteamId);
+      if (player && player.verified && (player.role === "STAFF" || player.role === "ADMIN")) {
+        return next();
+      }
+    } catch (err) {
+      console.error("Error verificando rol STAFF:", err);
+    }
+  }
+  return res.status(401).json({ error: "No autorizado" });
 }
 
 /* =========================================================
@@ -110,19 +127,27 @@ app.post("/api/register", async (req, res) => {
 
     // Si ya existía un registro pendiente para ese SteamID, lo reciclamos
     // en vez de crear un chat duplicado.
-    const existing = findBySteamId(idJugador);
+    const existing = await findBySteamId(idJugador);
     if (existing) {
       const oldTicket = existing.ticket;
-      existing.ticket = ticket;
-      existing.updatedAt = now;
-      players[ticket] = existing;
-      if (oldTicket !== ticket) delete players[oldTicket];
+      if (oldTicket !== ticket) {
+        await playersCol.updateOne(
+          { steamId64: idJugador },
+          { $set: { ticket, updatedAt: now } }
+        );
+      } else {
+        await playersCol.updateOne(
+          { steamId64: idJugador },
+          { $set: { updatedAt: now } }
+        );
+      }
     } else {
-      players[ticket] = {
+      await playersCol.insertOne({
         ticket,
         steamId64: idJugador,
         nickname: nickname || null,
         verified: false,
+        role: "PLAYER",
         name: "Jugador " + String(idJugador).slice(-4),
         nationality: null,
         kills: null,
@@ -137,10 +162,8 @@ app.post("/api/register", async (req, res) => {
             at: now
           }
         ]
-      };
+      });
     }
-
-    savePlayers(players);
 
     console.log("Nuevo registro:", { idJugador, nickname, ticket });
     res.json({ ok: true, ticket });
@@ -152,13 +175,14 @@ app.post("/api/register", async (req, res) => {
 
 /* =========================================================
    PERFIL — usado por el "gate" de todas las páginas para
-   saber si la cuenta ya está verificada.
+   saber si la cuenta ya está verificada, y por el front-end
+   para saber si tiene rol STAFF (y mostrarle el Menú Admin).
 ========================================================= */
-app.get("/api/profile", (req, res) => {
+app.get("/api/profile", async (req, res) => {
   const steamId64 = req.query.steamId64;
   if (!steamId64) return res.status(400).json({ error: "Falta steamId64" });
 
-  const player = findBySteamId(steamId64);
+  const player = await findBySteamId(steamId64);
   if (!player) {
     return res.status(404).json({ error: "No encontrado" });
   }
@@ -169,6 +193,7 @@ app.get("/api/profile", (req, res) => {
     avatarUrl: "nexus-logo.png",
     nationality: player.nationality || "—",
     verified: !!player.verified,
+    role: player.role && player.role !== "PLAYER" ? player.role : null,
     kills: player.kills ?? "—",
     deaths: player.deaths ?? "—",
     kd: player.kd ?? "—",
@@ -180,14 +205,14 @@ app.get("/api/profile", (req, res) => {
    CHAT — LADO JUGADOR (polling simple, sin login: se valida
    con el par ticket + steamId64 que ya tiene guardado en su navegador)
 ========================================================= */
-app.get("/api/chat/:ticket/messages", (req, res) => {
-  const player = findByTicket(req.params.ticket);
+app.get("/api/chat/:ticket/messages", async (req, res) => {
+  const player = await findByTicket(req.params.ticket);
   if (!player) return res.status(404).json({ error: "Ticket no encontrado" });
   res.json({ messages: player.messages, verified: player.verified });
 });
 
-app.post("/api/chat/:ticket/messages", (req, res) => {
-  const player = findByTicket(req.params.ticket);
+app.post("/api/chat/:ticket/messages", async (req, res) => {
+  const player = await findByTicket(req.params.ticket);
   if (!player) return res.status(404).json({ error: "Ticket no encontrado" });
 
   const { text, steamId64 } = req.body || {};
@@ -197,17 +222,21 @@ app.post("/api/chat/:ticket/messages", (req, res) => {
   }
 
   const msg = { from: "player", text: text.trim(), at: new Date().toISOString() };
-  player.messages.push(msg);
-  player.updatedAt = msg.at;
-  savePlayers(players);
+  await playersCol.updateOne(
+    { ticket: req.params.ticket },
+    { $push: { messages: msg }, $set: { updatedAt: msg.at } }
+  );
   res.json({ ok: true, message: msg });
 });
 
 /* =========================================================
-   CHAT — LADO ADMIN
+   CHAT — LADO ADMIN / STAFF
+   (requireStaff acepta el código maestro O un jugador
+   verificado con role STAFF/ADMIN)
 ========================================================= */
-app.get("/api/admin/players", requireAdmin, (req, res) => {
-  const list = Object.values(players)
+app.get("/api/admin/players", requireStaff, async (req, res) => {
+  const all = await playersCol.find({}).toArray();
+  const list = all
     .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
     .map(p => {
       const last = p.messages[p.messages.length - 1];
@@ -215,6 +244,7 @@ app.get("/api/admin/players", requireAdmin, (req, res) => {
         ticket: p.ticket,
         steamId64: p.steamId64,
         verified: p.verified,
+        role: p.role || "PLAYER",
         displayName: p.verified ? (p.nickname || p.name) : ("Nº " + p.ticket),
         lastMessage: last ? last.text : "",
         lastMessageFrom: last ? last.from : "",
@@ -224,39 +254,71 @@ app.get("/api/admin/players", requireAdmin, (req, res) => {
   res.json({ players: list });
 });
 
-app.get("/api/admin/players/:ticket", requireAdmin, (req, res) => {
-  const player = findByTicket(req.params.ticket);
+app.get("/api/admin/players/:ticket", requireStaff, async (req, res) => {
+  const player = await findByTicket(req.params.ticket);
   if (!player) return res.status(404).json({ error: "Ticket no encontrado" });
   res.json({ player });
 });
 
-app.post("/api/admin/players/:ticket/messages", requireAdmin, (req, res) => {
-  const player = findByTicket(req.params.ticket);
+app.post("/api/admin/players/:ticket/messages", requireStaff, async (req, res) => {
+  const player = await findByTicket(req.params.ticket);
   if (!player) return res.status(404).json({ error: "Ticket no encontrado" });
 
   const { text, adminName } = req.body || {};
   if (!text || !text.trim()) return res.status(400).json({ error: "Mensaje vacío" });
 
   const msg = { from: "admin", by: adminName || "STAFF", text: text.trim(), at: new Date().toISOString() };
-  player.messages.push(msg);
-  player.updatedAt = msg.at;
-  savePlayers(players);
+  await playersCol.updateOne(
+    { ticket: req.params.ticket },
+    { $push: { messages: msg }, $set: { updatedAt: msg.at } }
+  );
   res.json({ ok: true, message: msg });
 });
 
-app.post("/api/admin/players/:ticket/verify", requireAdmin, (req, res) => {
-  const player = findByTicket(req.params.ticket);
+app.post("/api/admin/players/:ticket/verify", requireStaff, async (req, res) => {
+  const player = await findByTicket(req.params.ticket);
   if (!player) return res.status(404).json({ error: "Ticket no encontrado" });
 
-  player.verified = true;
-  player.updatedAt = new Date().toISOString();
-  const msg = { from: "system", text: "✅ Tu cuenta fue verificada por el STAFF.", at: player.updatedAt };
-  player.messages.push(msg);
-  savePlayers(players);
+  const now = new Date().toISOString();
+  const msg = { from: "system", text: "✅ Tu cuenta fue verificada por el STAFF.", at: now };
+  await playersCol.updateOne(
+    { ticket: req.params.ticket },
+    { $push: { messages: msg }, $set: { verified: true, updatedAt: now } }
+  );
   res.json({ ok: true });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
+/* =========================================================
+   ROL — solo el código maestro puede ascender/descender a
+   alguien de STAFF, para que un STAFF no pueda auto-ascenderse
+   a ADMIN ni ascender a otros.
+========================================================= */
+app.post("/api/admin/players/:ticket/role", requireAdmin, async (req, res) => {
+  const player = await findByTicket(req.params.ticket);
+  if (!player) return res.status(404).json({ error: "Ticket no encontrado" });
+
+  const { role } = req.body || {};
+  const validRoles = ["PLAYER", "STAFF", "ADMIN"];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({ error: "Rol inválido. Usá PLAYER, STAFF o ADMIN." });
+  }
+
+  await playersCol.updateOne(
+    { ticket: req.params.ticket },
+    { $set: { role, updatedAt: new Date().toISOString() } }
+  );
+  res.json({ ok: true, role });
 });
+
+const PORT = process.env.PORT || 3000;
+
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Servidor escuchando en el puerto ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ No se pudo conectar a MongoDB, el servidor no va a arrancar:", err);
+    process.exit(1);
+  });
