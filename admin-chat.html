@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS // Menu Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:      #0a0b10;
+    --bg-panel:     #12141bcc;
+    --bg-panel-2:   #171a22e6;
+    --bg-panel-3:   #1c1f29;
+    --line:         #2a2d38;
+    --line-soft:    #1b1d25;
+    --text-hi:      #f4f4f5;
+    --text-mid:     #a7abb5;
+    --text-low:     #7d8189;
+    --blue:         #2320d5;
+    --blue-2:       #1852e1;
+    --cyan:         #02c1fc;
+    --amber:        #f5a623;
+    --red:          #e0453c;
+    --green:        #3ddc84;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    height:100%;
+    background: var(--bg-void);
+    color: var(--text-hi);
+    font-family:'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  .bg-glow{
+    position:fixed; inset:0;
+    background:
+      radial-gradient(650px 420px at 12% -6%, rgba(24,82,225,.20), transparent 60%),
+      radial-gradient(600px 400px at 108% 10%, rgba(2,193,252,.14), transparent 60%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .bg-grid{
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+    background-size: 34px 34px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ---------- gate: solo staff logueado puede ver esto ---------- */
+  .lock-screen{
+    position:fixed; inset:0;
+    z-index: 500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--bg-void);
+    text-align:center;
+    padding: 24px;
+  }
+  .lock-screen.is-hidden{ display:none; }
+  .lock-icon{ font-size: 34px; }
+  .lock-title{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:22px; }
+  .lock-text{ color: var(--text-mid); font-size: 13.5px; max-width: 360px; }
+  .lock-btn{
+    margin-top: 6px;
+    background: linear-gradient(90deg, var(--blue-2), var(--cyan));
+    border:none;
+    color:#04121c;
+    font-weight:700;
+    font-family:'Rajdhani',sans-serif;
+    letter-spacing:.5px;
+    padding: 11px 26px;
+    border-radius: 9px;
+    cursor:pointer;
+  }
+
+  /* ---------- shell ---------- */
+  .app{
+    position: relative;
+    z-index: 1;
+    display:flex;
+    height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    width: 340px;
+    min-width: 280px;
+    flex: 0 0 auto;
+    display:flex;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+    background: var(--bg-panel);
+    backdrop-filter: blur(6px);
+  }
+  .sidebar-head{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .sidebar-logo{ width: 26px; height:26px; border-radius:6px; object-fit:cover; }
+  .sidebar-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: .5px;
+  }
+  .sidebar-title small{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:500;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text-low);
+  }
+  .sidebar-identity{
+    margin-left:auto;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    border: 1px solid rgba(245,166,35,.3);
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+
+  .sidebar-tabs{
+    display:flex;
+    gap: 6px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .sidebar-tab{
+    flex:1;
+    text-align:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight:600;
+    letter-spacing: .3px;
+    color: var(--text-mid);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 7px 6px;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .sidebar-tab.is-active{
+    color: var(--cyan);
+    border-color: rgba(2,193,252,.4);
+    background: rgba(2,193,252,.08);
+  }
+  .sidebar-tab .count{
+    display:inline-block;
+    margin-left: 5px;
+    color: var(--text-low);
+  }
+
+  .sidebar-search{
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .sidebar-search input{
+    width:100%;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text-hi);
+    font-family:'Inter', sans-serif;
+    font-size: 13px;
+    outline:none;
+  }
+  .sidebar-search input:focus{ border-color: rgba(2,193,252,.4); }
+
+  .chat-list{
+    flex:1;
+    overflow-y:auto;
+  }
+  .chat-list-empty{
+    padding: 40px 20px;
+    text-align:center;
+    color: var(--text-low);
+    font-size: 12.5px;
+  }
+
+  .chat-item{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line-soft);
+    transition: background .12s ease;
+    position: relative;
+  }
+  .chat-item:hover{ background: var(--bg-panel-2); }
+  .chat-item.is-selected{ background: rgba(2,193,252,.08); }
+  .chat-item.is-selected::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--blue-2), var(--cyan));
+  }
+
+  .chat-avatar{
+    width: 42px; height:42px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size: 13px;
+    color: #04121c;
+    background: linear-gradient(135deg, var(--blue-2), var(--cyan));
+    position: relative;
+  }
+  .chat-avatar.is-verified{ background: linear-gradient(135deg, #1f9c5a, var(--green)); }
+  .status-dot{
+    position:absolute;
+    right:-1px; bottom:-1px;
+    width: 11px; height:11px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-panel);
+    background: var(--amber);
+  }
+  .status-dot.is-verified{ background: var(--green); }
+
+  .chat-item-body{ flex:1; min-width:0; }
+  .chat-item-top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap: 8px;
+  }
+  .chat-item-name{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:600;
+    font-size: 13.5px;
+    color: var(--text-hi);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .chat-item-time{
+    font-size: 10.5px;
+    color: var(--text-low);
+    flex: 0 0 auto;
+  }
+  .chat-item-preview{
+    font-size: 12px;
+    color: var(--text-mid);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-top: 2px;
+  }
+  .chat-item-preview .from-admin-tag{ color: var(--text-low); }
+
+  /* ---------- conversation panel ---------- */
+  .conversation{
+    flex:1;
+    display:flex;
+    flex-direction: column;
+    background:
+      radial-gradient(900px 500px at 50% -10%, rgba(24,82,225,.06), transparent 60%),
+      var(--bg-void);
+    min-width: 0;
+  }
+  .conv-empty{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--text-low);
+  }
+  .conv-empty-icon{ font-size: 40px; opacity:.5; }
+
+  .conv-head{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-panel);
+    backdrop-filter: blur(6px);
+  }
+  .conv-head-name{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 17px;
+  }
+  .conv-head-sub{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-mid);
+  }
+  .conv-head-actions{ margin-left:auto; display:flex; gap:8px; }
+  .conv-btn{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight:600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor:pointer;
+    border: 1px solid var(--line);
+    background: var(--bg-panel-2);
+    color: var(--text-mid);
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .conv-btn.verify{ color: var(--green); border-color: rgba(61,220,132,.35); }
+  .conv-btn.verify:hover{ background: rgba(61,220,132,.1); }
+  .conv-btn.verify:disabled{ opacity:.5; cursor:default; }
+  .conv-btn.discord{ color: var(--text-mid); }
+  .conv-btn.discord:hover{ border-color: var(--cyan); color: var(--cyan); }
+
+  .conv-messages{
+    flex:1;
+    overflow-y:auto;
+    padding: 22px;
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bubble{
+    max-width: 62%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+  .bubble.from-player{
+    align-self:flex-start;
+    background: var(--bg-panel-3);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 3px;
+  }
+  .bubble.from-admin{
+    align-self:flex-end;
+    background: linear-gradient(135deg, var(--blue-2), var(--cyan));
+    color: #04121c;
+    border-bottom-right-radius: 3px;
+  }
+  .bubble.from-system{
+    align-self:center;
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--text-mid);
+    font-style: italic;
+    font-size: 12px;
+  }
+  .bubble-meta{
+    display:block;
+    margin-top: 4px;
+    font-size: 10px;
+    opacity:.65;
+  }
+
+  .conv-form{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--line);
+    background: var(--bg-panel);
+    backdrop-filter: blur(6px);
+  }
+  .conv-input{
+    flex:1;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text-hi);
+    font-family:'Inter', sans-serif;
+    font-size: 13.5px;
+    outline:none;
+  }
+  .conv-input:focus{ border-color: rgba(2,193,252,.4); }
+  .conv-send{
+    width: 44px; height:44px;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    border:none;
+    background: linear-gradient(135deg, var(--blue-2), var(--cyan));
+    color:#04121c;
+    font-size: 16px;
+    cursor:pointer;
+  }
+  .conv-send:hover{ filter: brightness(1.08); }
+
+  @media (max-width: 760px){
+    .sidebar{ width: 100%; position:absolute; inset:0; z-index:5; transition: transform .2s ease; }
+    .sidebar.is-hidden-mobile{ transform: translateX(-100%); }
+    .conversation{ width:100%; }
+    .conv-back{ display:inline-block !important; }
+  }
+  .conv-back{ display:none; margin-right:4px; background:none; border:none; color:var(--text-mid); font-size:18px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <!-- ---------- LOCK: solo staff logueado ---------- -->
+  <div class="lock-screen" id="lock-screen">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">Acceso restringido</div>
+    <div class="lock-text">Este panel es solo para el STAFF de NEXUS. Iniciá sesión como administrador desde el sitio principal.</div>
+    <button class="lock-btn" onclick="window.location.href='index.html'">Ir al login</button>
+  </div>
+
+  <div class="app" id="app" style="display:none;">
+    <!-- ---------- SIDEBAR: lista de chats ---------- -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <img class="sidebar-logo" src="nexus-logo.png" alt="Nexus">
+        <div class="sidebar-title">Menu Admin<small>TICKETS &amp; CHATS</small></div>
+        <div class="sidebar-identity" id="sidebar-identity">—</div>
+      </div>
+
+      <div class="sidebar-tabs">
+        <div class="sidebar-tab is-active" id="tab-pending" onclick="setTab('pending')">Pendientes<span class="count" id="count-pending">0</span></div>
+        <div class="sidebar-tab" id="tab-verified" onclick="setTab('verified')">Verificados<span class="count" id="count-verified">0</span></div>
+        <div class="sidebar-tab" id="tab-all" onclick="setTab('all')">Todos<span class="count" id="count-all">0</span></div>
+      </div>
+
+      <div class="sidebar-search">
+        <input type="text" id="search-input" placeholder="Buscar ticket o SteamID64…" oninput="renderChatList()">
+      </div>
+
+      <div class="chat-list" id="chat-list">
+        <div class="chat-list-empty">Cargando tickets…</div>
+      </div>
+    </div>
+
+    <!-- ---------- CONVERSATION ---------- -->
+    <div class="conversation" id="conversation">
+      <div class="conv-empty" id="conv-empty">
+        <div class="conv-empty-icon">💬</div>
+        <div>Elegí un chat de la izquierda para empezar</div>
+      </div>
+
+      <div id="conv-active" style="display:none; flex:1; flex-direction:column; min-height:0;">
+        <div class="conv-head">
+          <button class="conv-back" onclick="closeConversationMobile()">←</button>
+          <div>
+            <div class="conv-head-name" id="conv-name">—</div>
+            <div class="conv-head-sub" id="conv-sub">—</div>
+          </div>
+          <div class="conv-head-actions">
+            <button class="conv-btn verify" id="verify-btn" onclick="verifyCurrentPlayer()">✓ Verificar cuenta</button>
+          </div>
+        </div>
+
+        <div class="conv-messages" id="conv-messages"></div>
+
+        <form class="conv-form" onsubmit="return sendAdminMessage(event)">
+          <input class="conv-input" id="conv-input" type="text" placeholder="Escribí un mensaje…" autocomplete="off">
+          <button class="conv-send" type="submit">➤</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const ADMIN_KEY_STORAGE = "nexus_admin_key";
+  const ADMIN_STORAGE_KEY = "nexus_admin_identity";
+
+  let adminKey = null;
+  let adminName = null;
+  let allPlayers = [];
+  let currentTab = "pending";
+  let currentTicket = null;
+  let listPoll = null;
+  let convPoll = null;
+
+  function apiHeaders(json){
+    const h = { "x-admin-key": adminKey };
+    if (json) h["Content-Type"] = "application/json";
+    return h;
+  }
+
+  (function init(){
+    try {
+      adminKey = localStorage.getItem(ADMIN_KEY_STORAGE);
+      adminName = localStorage.getItem(ADMIN_STORAGE_KEY);
+    } catch (err) {}
+
+    if (!adminKey || !adminName){
+      document.getElementById("lock-screen").classList.remove("is-hidden");
+      return;
+    }
+
+    document.getElementById("lock-screen").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+    document.getElementById("sidebar-identity").textContent = adminName;
+
+    refreshChatList();
+    listPoll = setInterval(refreshChatList, 6000);
+  })();
+
+  async function refreshChatList(){
+    try {
+      const res = await fetch("/api/admin/players", { headers: apiHeaders() });
+      if (res.status === 401){
+        try { localStorage.removeItem(ADMIN_KEY_STORAGE); } catch (err) {}
+        document.getElementById("app").style.display = "none";
+        document.getElementById("lock-screen").classList.remove("is-hidden");
+        return;
+      }
+      if (!res.ok) return;
+      const data = await res.json();
+      allPlayers = data.players || [];
+      updateTabCounts();
+      renderChatList();
+    } catch (err) {
+      console.warn("No se pudo cargar la lista de tickets:", err);
+    }
+  }
+
+  function updateTabCounts(){
+    const pending = allPlayers.filter(p => !p.verified).length;
+    const verified = allPlayers.filter(p => p.verified).length;
+    document.getElementById("count-pending").textContent = pending;
+    document.getElementById("count-verified").textContent = verified;
+    document.getElementById("count-all").textContent = allPlayers.length;
+  }
+
+  function setTab(tab){
+    currentTab = tab;
+    ["pending","verified","all"].forEach(t => {
+      document.getElementById("tab-" + t).classList.toggle("is-active", t === tab);
+    });
+    renderChatList();
+  }
+
+  function timeAgo(iso){
+    if (!iso) return "";
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "ahora";
+    if (mins < 60) return mins + "m";
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + "h";
+    return Math.floor(hrs / 24) + "d";
+  }
+
+  function renderChatList(){
+    const list = document.getElementById("chat-list");
+    const query = (document.getElementById("search-input").value || "").trim().toLowerCase();
+
+    let items = allPlayers;
+    if (currentTab === "pending") items = items.filter(p => !p.verified);
+    if (currentTab === "verified") items = items.filter(p => p.verified);
+    if (query){
+      items = items.filter(p =>
+        p.displayName.toLowerCase().includes(query) ||
+        p.ticket.toLowerCase().includes(query) ||
+        (p.steamId64 || "").toLowerCase().includes(query)
+      );
+    }
+
+    if (!items.length){
+      list.innerHTML = '<div class="chat-list-empty">No hay chats acá.</div>';
+      return;
+    }
+
+    list.innerHTML = items.map(p => {
+      const initials = p.verified ? (p.displayName || "?").slice(0,2).toUpperCase() : "🎫";
+      const preview = p.lastMessageFrom === "admin" ? `<span class="from-admin-tag">Vos: </span>${escapeHtml(p.lastMessage)}` : escapeHtml(p.lastMessage || "Sin mensajes todavía");
+      return `
+        <div class="chat-item ${p.ticket === currentTicket ? 'is-selected' : ''}" onclick="openConversation('${p.ticket}')">
+          <div class="chat-avatar ${p.verified ? 'is-verified' : ''}">${initials}<span class="status-dot ${p.verified ? 'is-verified' : ''}"></span></div>
+          <div class="chat-item-body">
+            <div class="chat-item-top">
+              <div class="chat-item-name">${escapeHtml(p.displayName)}</div>
+              <div class="chat-item-time">${timeAgo(p.updatedAt)}</div>
+            </div>
+            <div class="chat-item-preview">${preview}</div>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  function escapeHtml(str){
+    return String(str || "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[c]));
+  }
+
+  async function openConversation(ticket){
+    currentTicket = ticket;
+    document.getElementById("conv-empty").style.display = "none";
+    document.getElementById("conv-active").style.display = "flex";
+    document.getElementById("sidebar").classList.add("is-hidden-mobile");
+    renderChatList();
+    await loadConversation();
+    if (convPoll) clearInterval(convPoll);
+    convPoll = setInterval(loadConversation, 4000);
+  }
+
+  function closeConversationMobile(){
+    document.getElementById("sidebar").classList.remove("is-hidden-mobile");
+  }
+
+  async function loadConversation(){
+    if (!currentTicket) return;
+    try {
+      const res = await fetch("/api/admin/players/" + encodeURIComponent(currentTicket), { headers: apiHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      const p = data.player;
+      if (!p) return;
+
+      document.getElementById("conv-name").textContent = p.verified ? (p.nickname || p.name) : ("Nº " + p.ticket);
+      document.getElementById("conv-sub").textContent = "SteamID64: " + p.steamId64 + (p.verified ? " · Verificado" : " · Pendiente de verificación");
+
+      const verifyBtn = document.getElementById("verify-btn");
+      verifyBtn.disabled = p.verified;
+      verifyBtn.textContent = p.verified ? "✓ Verificado" : "✓ Verificar cuenta";
+
+      const box = document.getElementById("conv-messages");
+      const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+      box.innerHTML = (p.messages || []).map(m => {
+        const cls = m.from === "player" ? "from-player" : (m.from === "admin" ? "from-admin" : "from-system");
+        const who = m.from === "admin" ? (m.by || "STAFF") : "";
+        return `<div class="bubble ${cls}">${escapeHtml(m.text)}<span class="bubble-meta">${who ? who + " · " : ""}${new Date(m.at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
+      }).join("");
+      if (wasAtBottom) box.scrollTop = box.scrollHeight;
+
+      updateTabCounts();
+    } catch (err) {
+      console.warn("No se pudo cargar la conversación:", err);
+    }
+  }
+
+  async function sendAdminMessage(e){
+    e.preventDefault();
+    if (!currentTicket) return false;
+    const input = document.getElementById("conv-input");
+    const text = input.value.trim();
+    if (!text) return false;
+    input.value = "";
+    try {
+      await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/messages", {
+        method: "POST",
+        headers: apiHeaders(true),
+        body: JSON.stringify({ text, adminName })
+      });
+      loadConversation();
+      refreshChatList();
+    } catch (err) {
+      console.warn("No se pudo enviar el mensaje:", err);
+    }
+    return false;
+  }
+
+  async function verifyCurrentPlayer(){
+    if (!currentTicket) return;
+    if (!confirm("¿Confirmás que verificaste a este jugador?")) return;
+    try {
+      await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/verify", {
+        method: "POST",
+        headers: apiHeaders()
+      });
+      loadConversation();
+      refreshChatList();
+    } catch (err) {
+      console.warn("No se pudo verificar:", err);
+    }
+  }
+</script>
+</body>
+</html>

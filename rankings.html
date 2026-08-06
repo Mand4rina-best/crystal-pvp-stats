@@ -1770,7 +1770,7 @@
   /* ============ REGISTER GATE ============ */
 
   // Reemplazá esto por tu backend real (o un webhook) que reciba el JSON y lo guarde/valide.
-  const REGISTER_ENDPOINT = "https://TU-BACKEND-AQUI.com/api/register";
+  const REGISTER_ENDPOINT = "/api/register";
 
   const GATE_STORAGE_KEY = "nexus_gate_steamid"; // solo guardamos el SteamID64, nunca la contraseña
   const GATE_TICKET_KEY = "nexus_gate_ticket";
@@ -1917,7 +1917,7 @@
 
   // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
   // { name, avatarUrl, nationality, verified, kills, deaths, kd }
-  const PROFILE_ENDPOINT = "https://TU-BACKEND-AQUI.com/api/profile";
+  const PROFILE_ENDPOINT = "/api/profile";
 
   let currentProfileData = null;
   let currentProfileLang = currentLang;
