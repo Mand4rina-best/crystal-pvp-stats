@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 
 function env(name) {
@@ -6,6 +7,10 @@ function env(name) {
 }
 
 app.use(express.json());
+
+// Sirve los archivos estáticos (index.html, css, js, etc.) que estén
+// en la raíz del repo, al lado de este archivo.
+app.use(express.static(__dirname));
 
 app.post("/api/register", async (req, res) => {
   try {
