@@ -14,7 +14,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexus: Server</title>
+<title>CRYSTAL: RANKINGS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -50,11 +50,111 @@
     background-image:
       radial-gradient(circle at 12% 0%, rgba(35,32,213,0.14), transparent 40%),
       radial-gradient(circle at 88% 10%, rgba(2,193,252,0.10), transparent 38%);
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* ---------- ambient background (foto + glow + grid + partículas) ---------- */
+
+  .bg-photo{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background-image: url('nexus-bg.png');
+    background-size: cover;
+    background-position: center 40%;
+    background-repeat: no-repeat;
+    animation: bgBreathe 22s ease-in-out infinite alternate;
+    filter: saturate(1.1) brightness(0.85);
+  }
+  @keyframes bgBreathe{
+    0%   { transform: scale(1.0); background-position: center 40%; }
+    100% { transform: scale(1.08); background-position: center 44%; }
+  }
+  .bg-photo::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(6,8,14,0.35), rgba(6,8,14,0.86) 78%),
+      linear-gradient(180deg, rgba(6,8,14,0.55) 0%, rgba(6,8,14,0.55) 100%);
+  }
+
+  .bg-glow{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(35,32,213,0.16), transparent 42%),
+      radial-gradient(circle at 85% 15%, rgba(2,193,252,0.12), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(35,32,213,0.10), transparent 45%);
+    animation: drift 14s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+  }
+  @keyframes drift{
+    0%   { transform: scale(1) translate(0,0); }
+    100% { transform: scale(1.08) translate(-1%, 1%); }
+  }
+
+  .bg-grid{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    opacity:0.18;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%);
+  }
+
+  .bg-particles{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .particle{
+    position:absolute;
+    bottom:-10%;
+    width: 3px;
+    height: 3px;
+    border-radius:50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px 2px rgba(2,193,252,0.85);
+    opacity:0;
+    animation: floatUp linear infinite;
+  }
+  @keyframes floatUp{
+    0%   { opacity:0; transform: translateY(0) translateX(0); }
+    8%   { opacity:0.9; }
+    90%  { opacity:0.5; }
+    100% { opacity:0; transform: translateY(-110vh) translateX(var(--drift, 30px)); }
+  }
+
+  .scan{
+    position:fixed;
+    left:0; right:0;
+    height:2px;
+    z-index:1;
+    background: linear-gradient(90deg, transparent, rgba(2,193,252,0.55), transparent);
+    animation: scan 6s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes scan{
+    0%{ top:-2%; opacity:0; }
+    8%{ opacity:1; }
+    50%{ opacity:.55; }
+    92%{ opacity:0; }
+    100%{ top:102%; opacity:0; }
   }
 
   a{ color: inherit; text-decoration: none; }
 
   .shell{
+    position: relative;
+    z-index: 2;
     max-width: 1480px;
     margin: 0 auto;
     padding: 32px 40px 80px;
@@ -173,7 +273,16 @@
     left:16px; right:16px; bottom:-1px;
     height:2px;
     background: linear-gradient(90deg, var(--blue), var(--cyan));
+    transform-origin:center;
+    animation: tabUnderline .3s ease;
   }
+  @keyframes tabUnderline{
+    from{ transform: scaleX(0); opacity:0; }
+    to{ transform: scaleX(1); opacity:1; }
+  }
+  .tab{ transition: color .2s ease; }
+  .tab .dot{ transition: background .25s ease, box-shadow .25s ease, transform .25s ease; }
+  .tab.is-active .dot{ transform: scale(1.15); }
 
   /* ---------- LAYOUT ---------- */
 
@@ -243,11 +352,17 @@
 
   /* ---------- TABLE ---------- */
 
+  @keyframes fadeUp{
+    from{ opacity:0; transform: translateY(14px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
   .board{
     background: var(--bg-panel);
     border: 1px solid var(--line);
     border-radius: 10px;
     overflow:hidden;
+    animation: fadeUp .5s ease both;
   }
 
   .board-head{
@@ -299,13 +414,30 @@
   th.num, td.num{ text-align:center; width: 64px; }
   th.elo, td.elo{ text-align:center; width: 96px; }
 
+  @keyframes rowIn{
+    from{ opacity:0; transform: translateY(10px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
   tbody tr{
     border-bottom: 1px solid var(--line-soft);
-    transition: background .15s ease;
+    transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
     cursor: pointer;
+    animation: rowIn .42s cubic-bezier(.2,.8,.2,1) both;
   }
-  tbody tr:hover{ background: rgba(255,255,255,0.02); }
+  tbody tr:hover{
+    background: rgba(255,255,255,0.035);
+    transform: translateX(4px);
+    box-shadow: inset 3px 0 0 var(--cyan);
+  }
+  tbody tr:active{ transform: translateX(4px) scale(0.995); }
   tbody tr:last-child{ border-bottom:none; }
+
+  tbody tr.is-top3 .rank-cell{ animation: rankGlow 2.6s ease-in-out infinite; }
+  @keyframes rankGlow{
+    0%, 100%{ text-shadow: 0 0 0 rgba(2,193,252,0); }
+    50%{ text-shadow: 0 0 12px rgba(2,193,252,0.55); }
+  }
 
   td{ padding: 13px 18px; font-size: 14px; }
 
@@ -313,8 +445,10 @@
     font-family:'JetBrains Mono', monospace;
     font-weight:600;
     font-size: 14px;
+    transition: text-shadow .2s ease;
   }
   .rank-cell b{ font-size: 15px; }
+  tbody tr:hover .rank-cell{ text-shadow: 0 0 12px rgba(2,193,252,0.5); }
 
   /* letra-por-letra degrade, mismo tratamiento que el HUD del server */
   .grad span:nth-child(1){ color:#2320d5; }
@@ -330,9 +464,15 @@
     border-radius: 6px;
     background: linear-gradient(150deg, var(--blue), var(--cyan));
     flex: 0 0 auto;
+    transition: box-shadow .2s ease, transform .2s ease;
+  }
+  tbody tr:hover .avatar{
+    box-shadow: 0 0 12px rgba(2,193,252,0.55);
+    transform: scale(1.08);
   }
 
-  .player-name{ font-weight:600; color: var(--text-hi); font-size: 14px; }
+  .player-name{ font-weight:600; color: var(--text-hi); font-size: 14px; transition: color .15s ease; }
+  tbody tr:hover .player-name{ color: var(--cyan); }
   .player-region{
     font-family:'JetBrains Mono', monospace;
     font-size: 11px;
@@ -362,6 +502,12 @@
     color: var(--amber);
     background: rgba(255,216,168,0.12);
     border: 1px solid rgba(255,216,168,0.3);
+    transition: box-shadow .2s ease, background .2s ease, transform .2s ease;
+  }
+  tbody tr:hover .elo-value{
+    background: rgba(255,216,168,0.24);
+    box-shadow: 0 0 14px rgba(255,216,168,0.4);
+    transform: translateY(-1px);
   }
 
   .board-foot{
@@ -716,11 +862,387 @@
   .lang-option:hover{ background: var(--bg-panel-2); color: var(--text-hi); }
   .lang-option.is-selected{ color: var(--cyan); }
   .lang-flag{ font-size: 15px; }
+
+  /* ---------- admin button (misma altura que el selector de idioma) ---------- */
+
+  .admin-btn{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight:500;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 6px 14px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .admin-btn:hover{ color: var(--amber); border-color: var(--amber); background: var(--bg-panel-2); }
+
+  /* ---------- REGISTER GATE ---------- */
+
+  .gate-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    background: rgba(6,7,11,0.86);
+    backdrop-filter: blur(6px);
+  }
+  .gate-overlay.is-hidden{ display:none; }
+
+  .gate-card{
+    width:100%;
+    max-width: 420px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow:hidden;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+  }
+
+  .gate-head{
+    padding: 22px 26px 16px;
+    text-align:center;
+    border-bottom: 1px solid var(--line-soft);
+    background: linear-gradient(135deg, rgba(35,32,213,0.14), rgba(2,193,252,0.06));
+  }
+
+  .gate-logo{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:2px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:800;
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .gate-logo span:nth-child(1){ color:#2320d5; }
+  .gate-logo span:nth-child(2){ color:#1c3edc; }
+  .gate-logo span:nth-child(3){ color:#1852e1; }
+  .gate-logo span:nth-child(4){ color:#0e85ed; }
+  .gate-logo span:nth-child(5){ color:#02c1fc; }
+
+  .gate-subtitle{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-low);
+  }
+
+  .gate-body{ padding: 22px 26px 26px; }
+
+  .gate-field{ margin-bottom: 14px; }
+  .gate-label{
+    display:block;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+  .gate-input{
+    width:100%;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text-hi);
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    padding: 11px 13px;
+    transition: border-color .15s ease;
+  }
+  .gate-input:focus{ outline:none; border-color: var(--cyan); }
+  .gate-input::placeholder{ color: var(--text-low); }
+
+  .gate-error{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--red);
+    min-height: 16px;
+    margin-top: -4px;
+    margin-bottom: 8px;
+  }
+
+  .gate-submit{
+    width:100%;
+    margin-top: 6px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 15px;
+    letter-spacing: 0.4px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border: none;
+    border-radius: 9px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .gate-submit:hover{ filter: brightness(1.1); transform: translateY(-1px); }
+  .gate-submit:disabled{ opacity:0.6; cursor:not-allowed; transform:none; filter:none; }
+
+  .gate-note{
+    margin-top: 14px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height:1.5;
+    color: var(--text-low);
+    text-align:center;
+  }
+
+  .gate-pending{ display:none; padding: 30px 26px 30px; text-align:center; }
+  .gate-pending.is-active{ display:block; }
+  .gate-form.is-hidden{ display:none; }
+
+  .gate-pending-icon{
+    width: 54px; height:54px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(255,216,168,0.14);
+    border: 1px solid rgba(255,216,168,0.35);
+    font-size: 24px;
+  }
+
+  .gate-pending-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 20px;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  .gate-pending-text{
+    font-size: 13.5px;
+    line-height:1.6;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+
+  .gate-pending-id{
+    display:inline-block;
+    margin-top: 10px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+
+  .gate-ticket-box{
+    margin: 18px 0 6px;
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(255,216,168,0.08);
+    border: 1px solid rgba(255,216,168,0.35);
+  }
+
+  .gate-ticket-label{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  .gate-ticket-number{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight:700;
+    letter-spacing: 3px;
+    color: var(--text-hi);
+  }
+
+  .gate-ticket-note{
+    margin-top: 10px;
+    font-size: 12.5px;
+    line-height:1.5;
+    color: var(--text-mid);
+  }
+
+  .gate-ticket-note code{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--cyan);
+    background: var(--bg-panel-2);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .gate-continue{
+    width:100%;
+    margin-top: 20px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 14px;
+    letter-spacing: 0.4px;
+    color: var(--text-hi);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .gate-continue:hover{ border-color: var(--cyan); color: var(--cyan); }
+
+  /* ---------- admin auth step (dentro del gate) ---------- */
+
+  .gate-admin-form{ display:none; }
+  .gate-admin-form.is-active{ display:block; }
+
+  .gate-back{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-low);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding: 0 0 16px;
+    transition: color .15s ease;
+  }
+  .gate-back:hover{ color: var(--cyan); }
+
+  /* ---------- admin identity select step ---------- */
+
+  .gate-admin-select{ display:none; padding: 26px 26px 26px; text-align:center; }
+  .gate-admin-select.is-active{ display:block; }
+
+  .gate-admin-welcome{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 21px;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+  .gate-admin-subtext{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-low);
+    margin-bottom: 20px;
+  }
+  .gate-admin-list{ display:flex; flex-direction:column; gap:10px; }
+  .gate-admin-option{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 13px 16px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--bg-panel-2);
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 16px;
+    letter-spacing: 0.4px;
+    color: var(--text-hi);
+    cursor:pointer;
+    transition: border-color .15s ease, color .15s ease, transform .15s ease;
+  }
+  .gate-admin-option:hover{ border-color: var(--amber); color: var(--amber); transform: translateY(-1px); }
 </style>
 </head>
 <body>
 
+  <!-- ================= REGISTER GATE ================= -->
+  <div class="gate-overlay" id="gate-overlay">
+    <div class="gate-card">
+
+      <div class="gate-head">
+        <div class="gate-logo">
+          <span>N</span><span>E</span><span>X</span><span>U</span><span>S</span>
+        </div>
+        <div class="gate-subtitle" id="gate-subtitle">Verificá tu cuenta para continuar</div>
+      </div>
+
+      <!-- ---------- STEP 1: FORM ---------- -->
+      <form class="gate-body gate-form" id="gate-form" onsubmit="return handleGateSubmit(event)">
+        <div class="gate-field">
+          <label class="gate-label" for="gate-steamid">SteamID64</label>
+          <input class="gate-input" type="text" id="gate-steamid" placeholder="7656119XXXXXXXXXX" inputmode="numeric" autocomplete="off" required>
+        </div>
+
+        <div class="gate-field">
+          <label class="gate-label" for="gate-password">Contraseña</label>
+          <input class="gate-input" type="password" id="gate-password" placeholder="Elegí una contraseña" autocomplete="new-password" required>
+        </div>
+
+        <div class="gate-error" id="gate-error"></div>
+
+        <button class="gate-submit" type="submit" id="gate-submit-btn">REGISTRARME</button>
+
+        <div class="gate-note">
+          Esta contraseña es solo para tu cuenta en NEXUS,<br> no es tu contraseña de Steam.
+        </div>
+      </form>
+
+      <!-- ---------- STEP 2: PENDING CONFIRMATION ---------- -->
+      <div class="gate-pending" id="gate-pending">
+        <div class="gate-pending-icon">⏳</div>
+        <div class="gate-pending-title">¡Ahora Espera!</div>
+        <div class="gate-pending-text">
+          El STAFF va a confirmar que sos el verdadero tutor de esta cuenta antes de darte acceso completo.
+        </div>
+
+        <div class="gate-ticket-box">
+          <div class="gate-ticket-label">Este es tu número de ticket</div>
+          <div class="gate-ticket-number" id="gate-ticket-number">——————</div>
+          <div class="gate-ticket-note">
+            Anotalo: lo vas a necesitar en Discord para abrir tu canal privado con el STAFF, usando el comando <code>/registrar-ticket</code>.
+          </div>
+        </div>
+
+        <div class="gate-pending-id" id="gate-pending-id">SteamID64: —</div>
+        <button class="gate-continue" type="button" onclick="dismissGate()">Entendido, continuar</button>
+      </div>
+
+      <!-- ---------- STEP ADMIN: AUTH ---------- -->
+      <form class="gate-body gate-admin-form" id="gate-admin-form" onsubmit="return handleAdminAuthSubmit(event)">
+        <button type="button" class="gate-back" onclick="closeAdminGate()">← Volver</button>
+        <div class="gate-field">
+          <label class="gate-label" for="gate-admin-auth">AUTH:</label>
+          <input class="gate-input" type="password" id="gate-admin-auth" placeholder="••••••••••••" inputmode="numeric" autocomplete="off" required>
+        </div>
+        <div class="gate-error" id="gate-admin-error"></div>
+        <button class="gate-submit" type="submit">INGRESAR</button>
+      </form>
+
+      <!-- ---------- STEP ADMIN: SELECT IDENTITY ---------- -->
+      <div class="gate-admin-select" id="gate-admin-select">
+        <div class="gate-admin-welcome">Bienvenido Administrador</div>
+        <div class="gate-admin-subtext">Seleccioná quién sos</div>
+        <div class="gate-admin-list">
+          <div class="gate-admin-option" onclick="selectAdminIdentity('Holsky')">Holsky</div>
+          <div class="gate-admin-option" onclick="selectAdminIdentity('Grinek')">Grinek</div>
+          <div class="gate-admin-option" onclick="selectAdminIdentity('mand4rina')">mand4rina</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ================= LANGUAGE SELECTOR ================= -->
+  <div class="bg-photo"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-particles" id="bg-particles"></div>
+  <div class="scan"></div>
   <div class="topbar-right" id="topbar-right">
 
     <!-- ---------- PROFILE CHIP (visible once registered) ---------- -->
@@ -742,6 +1264,10 @@
             <div class="profile-tile-label" id="profile-nat-label">Nacionalidad</div>
             <div class="profile-tile-value" id="profile-nationality">—</div>
           </div>
+          <div class="profile-tile span-2" id="profile-role-tile" style="display:none;">
+            <div class="profile-tile-label">Rol:</div>
+            <div class="profile-tile-value" id="profile-role" style="color: var(--amber);">—</div>
+          </div>
           <div class="profile-tile">
             <div class="profile-tile-label" id="profile-kills-label">Kills</div>
             <div class="profile-tile-value" id="profile-kills">—</div>
@@ -757,6 +1283,9 @@
         </div>
       </div>
     </div>
+
+    <!-- ---------- ADMIN BUTTON (misma altura que el idioma, a la izquierda) ---------- -->
+    <button class="admin-btn" id="admin-btn" onclick="openAdminGate()">Administrador</button>
 
     <!-- ---------- LANGUAGE SELECTOR ---------- -->
     <div class="lang-select" id="lang-select">
@@ -906,6 +1435,29 @@
   </div>
 
 <script>
+  /* ============ PARTICULAS FLOTANTES SOBRE EL FONDO ============ */
+  (function spawnParticles(){
+    const wrap = document.getElementById('bg-particles');
+    if (!wrap) return;
+    const total = 26;
+    for (let i = 0; i < total; i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const left = Math.random() * 100;
+      const dur = 10 + Math.random() * 14;
+      const delay = Math.random() * 18;
+      const drift = (Math.random() * 60 - 30) + 'px';
+      const size = (2 + Math.random() * 2.5).toFixed(1) + 'px';
+      p.style.left = left + 'vw';
+      p.style.width = size;
+      p.style.height = size;
+      p.style.setProperty('--drift', drift);
+      p.style.animationDuration = dur + 's';
+      p.style.animationDelay = delay + 's';
+      wrap.appendChild(p);
+    }
+  })();
+
   /* ============ IDIOMA (fuente única de textos para toda la página) ============ */
   const I18N = {
     en: {
@@ -1091,6 +1643,8 @@
 
         const tr = document.createElement("tr");
         tr.onclick = () => openModal(p, realRank);
+        tr.style.animationDelay = (Math.min(realRank, 14) * 0.035) + "s";
+        if (realRank <= 3) tr.classList.add("is-top3");
         tr.innerHTML = `
           <td class="num rank-cell grad">${gradientRank(realRank)}</td>
           <td>
@@ -1213,9 +1767,141 @@
     if (chip && !chip.contains(e.target)) chip.classList.remove("is-open");
   });
 
+  /* ============ REGISTER GATE ============ */
+
+  // Reemplazá esto por tu backend real (o un webhook) que reciba el JSON y lo guarde/valide.
+  const REGISTER_ENDPOINT = "https://TU-BACKEND-AQUI.com/api/register";
+
+  const GATE_STORAGE_KEY = "nexus_gate_steamid"; // solo guardamos el SteamID64, nunca la contraseña
+  const GATE_TICKET_KEY = "nexus_gate_ticket";
+
+  function generarTicketDeRespaldo(){
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  function isValidSteamId64(value){
+    return /^7656119\d{10}$/.test(value.trim());
+  }
+
+  function showGateError(msg){
+    document.getElementById("gate-error").textContent = msg;
+  }
+
+  async function handleGateSubmit(e){
+    e.preventDefault();
+    showGateError("");
+
+    const steamId64 = document.getElementById("gate-steamid").value.trim();
+    const password = document.getElementById("gate-password").value;
+    const submitBtn = document.getElementById("gate-submit-btn");
+
+    if (!isValidSteamId64(steamId64)){
+      showGateError("SteamID64 inválido. Debe tener 17 dígitos (ej: 76561198012345678).");
+      return false;
+    }
+    if (password.length < 6){
+      showGateError("La contraseña debe tener al menos 6 caracteres.");
+      return false;
+    }
+
+    const payload = {
+      steamId64: steamId64,
+      password: password,
+      status: "pending_staff_review",
+      requestedAt: new Date().toISOString()
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando...";
+
+    let numeroTicket = null;
+
+    try {
+      const resp = await fetch(REGISTER_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json().catch(() => null);
+      if (data && data.ticket) {
+        numeroTicket = String(data.ticket);
+      }
+    } catch (err) {
+      console.warn("No se pudo enviar el registro al backend:", err);
+    }
+
+    if (!numeroTicket) {
+      numeroTicket = generarTicketDeRespaldo();
+    }
+
+    try {
+      localStorage.setItem(GATE_STORAGE_KEY, steamId64);
+      localStorage.setItem(GATE_TICKET_KEY, numeroTicket);
+    } catch (err) {}
+
+    showProfileChip(steamId64);
+
+    document.getElementById("gate-form").classList.add("is-hidden");
+    document.getElementById("gate-pending").classList.add("is-active");
+    document.getElementById("gate-ticket-number").textContent = numeroTicket;
+    document.getElementById("gate-pending-id").textContent = "SteamID64: " + steamId64;
+    document.getElementById("gate-subtitle").textContent = "Registro enviado";
+
+    return false;
+  }
+
+  function dismissGate(){
+    document.getElementById("gate-overlay").classList.add("is-hidden");
+  }
+
+  /* ============ ADMIN LOGIN (AUTH) ============ */
+
+  const ADMIN_AUTH_CODE = "9912938414112";
+  const ADMIN_STORAGE_KEY = "nexus_admin_identity";
+
+  function openAdminGate(){
+    document.getElementById("gate-overlay").classList.remove("is-hidden");
+    document.getElementById("gate-form").classList.add("is-hidden");
+    document.getElementById("gate-pending").classList.remove("is-active");
+    document.getElementById("gate-admin-select").classList.remove("is-active");
+    document.getElementById("gate-admin-form").classList.add("is-active");
+    document.getElementById("gate-subtitle").textContent = "Acceso de Administrador";
+    document.getElementById("gate-admin-error").textContent = "";
+    document.getElementById("gate-admin-auth").value = "";
+  }
+
+  function closeAdminGate(){
+    document.getElementById("gate-admin-form").classList.remove("is-active");
+    document.getElementById("gate-form").classList.remove("is-hidden");
+    document.getElementById("gate-subtitle").textContent = "Verificá tu cuenta para continuar";
+    try {
+      const savedId = localStorage.getItem(GATE_STORAGE_KEY);
+      const adminName = localStorage.getItem(ADMIN_STORAGE_KEY);
+      if (savedId || adminName) dismissGate();
+    } catch (err) {}
+  }
+
+  function handleAdminAuthSubmit(e){
+    e.preventDefault();
+    const code = document.getElementById("gate-admin-auth").value.trim();
+    if (code !== ADMIN_AUTH_CODE){
+      document.getElementById("gate-admin-error").textContent = "Código incorrecto.";
+      return false;
+    }
+    document.getElementById("gate-admin-form").classList.remove("is-active");
+    document.getElementById("gate-admin-select").classList.add("is-active");
+    document.getElementById("gate-subtitle").textContent = "Bienvenido Administrador";
+    return false;
+  }
+
+  function selectAdminIdentity(name){
+    try { localStorage.setItem(ADMIN_STORAGE_KEY, name); } catch (err) {}
+    dismissGate();
+    showProfileChip(name, true);
+  }
+
   /* ============ PROFILE CHIP (nombre + foto de Steam) ============ */
 
-  const GATE_STORAGE_KEY = "nexus_gate_steamid";
   const PROFILE_STORAGE_KEY = "nexus_gate_profile";
 
   // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
@@ -1232,8 +1918,23 @@
     pl:{ pending:"W Trakcie", verified:"Zweryfikowany", nationality:"Narodowość", kills:"Kills", deaths:"Deaths", kd:"K/D Ratio" }
   };
 
-  function showProfileChip(steamId64){
+  function showProfileChip(steamId64, isAdmin){
     document.getElementById("profile-chip").classList.add("is-visible");
+
+    if (isAdmin){
+      renderProfile({
+        steamId64: steamId64,
+        name: steamId64,
+        avatarUrl: "nexus-logo.png",
+        nationality: "STAFF",
+        role: "Administrador",
+        verified: true,
+        kills: "—",
+        deaths: "—",
+        kd: "—"
+      });
+      return;
+    }
 
     let cached = null;
     try {
@@ -1286,6 +1987,14 @@
     document.getElementById("profile-deaths").textContent = (data.deaths ?? "—");
     document.getElementById("profile-kd").textContent = (data.kd ?? "—");
 
+    const roleTile = document.getElementById("profile-role-tile");
+    if (data.role){
+      roleTile.style.display = "";
+      document.getElementById("profile-role").textContent = data.role;
+    } else {
+      roleTile.style.display = "none";
+    }
+
     document.getElementById("profile-nat-label").textContent = dict.nationality;
     document.getElementById("profile-kills-label").textContent = dict.kills;
     document.getElementById("profile-deaths-label").textContent = dict.deaths;
@@ -1310,10 +2019,20 @@
     document.getElementById("profile-chip").classList.toggle("is-open");
   }
 
-  (function checkProfileOnLoad(){
+  (function checkGateOnLoad(){
     try {
+      const adminName = localStorage.getItem(ADMIN_STORAGE_KEY);
+      if (adminName){
+        dismissGate();
+        showProfileChip(adminName, true);
+        return;
+      }
       const savedId = localStorage.getItem(GATE_STORAGE_KEY);
-      if (savedId) showProfileChip(savedId);
+      if (savedId){
+        dismissGate();
+        showProfileChip(savedId);
+      }
+      // si no hay savedId ni adminName, el gate queda visible (comportamiento por defecto)
     } catch (err) {}
   })();
 

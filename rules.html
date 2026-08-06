@@ -14,7 +14,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS: SERVER / RULES</title>
+<title>NEXUS // RULES</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -54,31 +54,81 @@
 
   /* ---------- ambient background ---------- */
 
+  .bg-photo{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background-image: url('nexus-bg.png');
+    background-size: cover;
+    background-position: center 40%;
+    background-repeat: no-repeat;
+    animation: bgBreathe 22s ease-in-out infinite alternate;
+    filter: saturate(1.1) brightness(0.85);
+  }
+  @keyframes bgBreathe{
+    0%   { transform: scale(1.0); background-position: center 40%; }
+    100% { transform: scale(1.08); background-position: center 44%; }
+  }
+  .bg-photo::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(6,8,14,0.35), rgba(6,8,14,0.86) 78%),
+      linear-gradient(180deg, rgba(6,8,14,0.55) 0%, rgba(6,8,14,0.55) 100%);
+  }
+
   .bg-glow{
     position:fixed;
     inset:0;
     z-index:0;
     background:
-      radial-gradient(circle at 10% 0%, rgba(35,32,213,0.18), transparent 40%),
-      radial-gradient(circle at 90% 10%, rgba(2,193,252,0.12), transparent 38%),
-      radial-gradient(circle at 50% 100%, rgba(255,77,94,0.06), transparent 45%);
-    animation: drift 16s ease-in-out infinite alternate;
+      radial-gradient(circle at 15% 20%, rgba(35,32,213,0.16), transparent 42%),
+      radial-gradient(circle at 85% 15%, rgba(2,193,252,0.12), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(35,32,213,0.10), transparent 45%);
+    animation: drift 14s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
   }
   @keyframes drift{
-    0%{ transform: scale(1) translate(0,0); }
-    100%{ transform: scale(1.07) translate(-1%,1%); }
+    0%   { transform: scale(1) translate(0,0); }
+    100% { transform: scale(1.08) translate(-1%, 1%); }
   }
 
   .bg-grid{
     position:fixed;
     inset:0;
     z-index:0;
-    opacity:0.3;
+    opacity:0.18;
     background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
     background-size: 42px 42px;
-    mask-image: radial-gradient(circle at 50% 10%, black, transparent 70%);
+    mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%);
+  }
+
+  .bg-particles{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .particle{
+    position:absolute;
+    bottom:-10%;
+    width: 3px;
+    height: 3px;
+    border-radius:50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px 2px rgba(2,193,252,0.85);
+    opacity:0;
+    animation: floatUp linear infinite;
+  }
+  @keyframes floatUp{
+    0%   { opacity:0; transform: translateY(0) translateX(0); }
+    8%   { opacity:0.9; }
+    90%  { opacity:0.5; }
+    100% { opacity:0; transform: translateY(-110vh) translateX(var(--drift, 30px)); }
   }
 
   .scan{
@@ -86,8 +136,8 @@
     left:0; right:0;
     height:2px;
     z-index:1;
-    background: linear-gradient(90deg, transparent, rgba(2,193,252,0.5), transparent);
-    animation: scan 7s linear infinite;
+    background: linear-gradient(90deg, transparent, rgba(2,193,252,0.55), transparent);
+    animation: scan 6s linear infinite;
     pointer-events:none;
   }
   @keyframes scan{
@@ -538,8 +588,10 @@
 </head>
 <body>
 
+  <div class="bg-photo"></div>
   <div class="bg-glow"></div>
   <div class="bg-grid"></div>
+  <div class="bg-particles" id="bg-particles"></div>
   <div class="scan"></div>
 
   <!-- ================= LANGUAGE SELECTOR ================= -->
@@ -688,6 +740,29 @@
   </div>
 
 <script>
+  /* ============ PARTICULAS FLOTANTES SOBRE EL FONDO ============ */
+  (function spawnParticles(){
+    const wrap = document.getElementById('bg-particles');
+    if (!wrap) return;
+    const total = 26;
+    for (let i = 0; i < total; i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const left = Math.random() * 100;
+      const dur = 10 + Math.random() * 14;
+      const delay = Math.random() * 18;
+      const drift = (Math.random() * 60 - 30) + 'px';
+      const size = (2 + Math.random() * 2.5).toFixed(1) + 'px';
+      p.style.left = left + 'vw';
+      p.style.width = size;
+      p.style.height = size;
+      p.style.setProperty('--drift', drift);
+      p.style.animationDuration = dur + 's';
+      p.style.animationDelay = delay + 's';
+      wrap.appendChild(p);
+    }
+  })();
+
   const I18N = {
     en: {
       back: "Back To Menu",
