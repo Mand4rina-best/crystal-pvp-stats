@@ -31,7 +31,9 @@ async function connectDB() {
     console.error("⚠️  Falta la variable de entorno MONGODB_URI. Configurala en Render → Environment.");
     return;
   }
-  const client = new MongoClient(MONGODB_URI);
+  const client = new MongoClient(MONGODB_URI, {
+    family: 4 // fuerza IPv4: evita fallos de TLS/handshake típicos de Render con IPv6
+  });
   await client.connect();
   const db = client.db(); // usa la base indicada en el connection string
   playersCol = db.collection("players");
