@@ -165,8 +165,8 @@
   .site-header{
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:24px;
+    justify-content:flex-start;
+    gap:18px;
     margin-bottom: 28px;
   }
 
@@ -1852,6 +1852,17 @@
 
   function dismissGate(){
     document.getElementById("gate-overlay").classList.add("is-hidden");
+    updateAdminBtnVisibility();
+  }
+
+  function updateAdminBtnVisibility(){
+    const btn = document.getElementById("admin-btn");
+    if (!btn) return;
+    let loggedIn = false;
+    try {
+      loggedIn = !!(localStorage.getItem(GATE_STORAGE_KEY) || localStorage.getItem(ADMIN_STORAGE_KEY));
+    } catch (err) {}
+    btn.style.display = loggedIn ? "none" : "";
   }
 
   /* ============ ADMIN LOGIN (AUTH) ============ */

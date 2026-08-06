@@ -657,6 +657,7 @@
   /* ============ PROFILE CHIP (nombre + foto de Steam) ============ */
 
   const GATE_STORAGE_KEY = "nexus_gate_steamid";
+  const ADMIN_STORAGE_KEY = "nexus_admin_identity";
   const PROFILE_STORAGE_KEY = "nexus_gate_profile";
 
   // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
@@ -673,8 +674,22 @@
     pl:{ pending:"W Trakcie", verified:"Zweryfikowany", nationality:"Narodowość", kills:"Kills", deaths:"Deaths", kd:"K/D Ratio" }
   };
 
-  function showProfileChip(steamId64){
+  function showProfileChip(steamId64, isAdmin){
     document.getElementById("profile-chip").classList.add("is-visible");
+
+    if (isAdmin){
+      renderProfile({
+        steamId64: steamId64,
+        name: steamId64,
+        avatarUrl: "nexus-logo.png",
+        nationality: "STAFF",
+        verified: true,
+        kills: "\u2014",
+        deaths: "\u2014",
+        kd: "\u2014"
+      });
+      return;
+    }
 
     let cached = null;
     try {
@@ -753,6 +768,11 @@
 
   (function checkProfileOnLoad(){
     try {
+      const adminName = localStorage.getItem(ADMIN_STORAGE_KEY);
+      if (adminName){
+        showProfileChip(adminName, true);
+        return;
+      }
       const savedId = localStorage.getItem(GATE_STORAGE_KEY);
       if (savedId) showProfileChip(savedId);
     } catch (err) {}
