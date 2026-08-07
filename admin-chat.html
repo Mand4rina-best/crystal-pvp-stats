@@ -136,6 +136,37 @@
     padding: 4px 9px;
     border-radius: 999px;
   }
+  .sidebar-back{
+    flex: 0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text-mid);
+    font-size: 15px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .sidebar-back:hover{ border-color: var(--cyan); color: var(--cyan); }
+
+  .test-chat-btn{
+    margin: 0 16px 12px;
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--text-mid);
+    border-radius: 9px;
+    padding: 8px 12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    cursor:pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .test-chat-btn:hover{ border-color: var(--amber); color: var(--amber); }
 
   .sidebar-tabs{
     display:flex;
@@ -433,6 +464,7 @@
     <!-- ---------- SIDEBAR: lista de chats ---------- -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-head">
+        <a class="sidebar-back" href="index.html" title="Volver">←</a>
         <img class="sidebar-logo" src="nexus-logo.png" alt="Nexus">
         <div class="sidebar-title">Menu Admin<small>TICKETS &amp; CHATS</small></div>
         <div class="sidebar-identity" id="sidebar-identity">—</div>
@@ -447,6 +479,8 @@
       <div class="sidebar-search">
         <input type="text" id="search-input" placeholder="Buscar ticket o SteamID64…" oninput="renderChatList()">
       </div>
+
+      <button class="test-chat-btn" type="button" onclick="addTestChat()">🧪 Crear chat de prueba</button>
 
       <div class="chat-list" id="chat-list">
         <div class="chat-list-empty">Cargando tickets…</div>
@@ -499,6 +533,58 @@
   let listPoll = null;
   let convPoll = null;
 
+  // ---- Chats de prueba: viven solo en este navegador, nunca tocan el backend ----
+  // Sirven para poder probar la UI del panel (mandar mensajes, verificar, etc.)
+  // sin necesitar un jugador real registrado.
+  const testPlayers = {}; // ticket -> objeto con forma de "player" (igual al que devuelve /api/admin/players/:ticket)
+  let testChatCounter = 0;
+
+  function isTestTicket(ticket){
+    return typeof ticket === "string" && ticket.startsWith("TEST-");
+  }
+
+  function addTestChat(){
+    testChatCounter += 1;
+    const ticket = "TEST-" + testChatCounter + "-" + Math.floor(Math.random() * 900 + 100);
+    const now = new Date().toISOString();
+    testPlayers[ticket] = {
+      ticket,
+      steamId64: "76561190000000" + testChatCounter,
+      nickname: "Jugador de prueba " + testChatCounter,
+      name: "Jugador de prueba " + testChatCounter,
+      verified: false,
+      role: "PLAYER",
+      messages: [
+        { from: "system", text: "🧪 Chat de prueba creado. Nadie del otro lado va a leer esto: es solo para probar la interfaz.", at: now },
+        { from: "player", text: "Hola, esto es un mensaje de prueba de un jugador.", at: now }
+      ],
+      createdAt: now,
+      updatedAt: now
+    };
+    mergeTestPlayersIntoList();
+    renderChatList();
+    updateTabCounts();
+    openConversation(ticket);
+  }
+
+  function mergeTestPlayersIntoList(){
+    const testEntries = Object.values(testPlayers).map(p => {
+      const last = p.messages[p.messages.length - 1];
+      return {
+        ticket: p.ticket,
+        steamId64: p.steamId64,
+        verified: p.verified,
+        role: p.role || "PLAYER",
+        displayName: "🧪 " + (p.verified ? (p.nickname || p.name) : ("Nº " + p.ticket)),
+        lastMessage: last ? last.text : "",
+        lastMessageFrom: last ? last.from : "",
+        updatedAt: p.updatedAt || p.createdAt
+      };
+    });
+    const real = allPlayers.filter(p => !isTestTicket(p.ticket));
+    allPlayers = [...testEntries, ...real];
+  }
+
   function apiHeaders(json){
     const h = adminKey ? { "x-admin-key": adminKey } : { "x-staff-steamid": staffSteamId };
     if (json) h["Content-Type"] = "application/json";
@@ -547,10 +633,15 @@
       if (!res.ok) return;
       const data = await res.json();
       allPlayers = data.players || [];
+      mergeTestPlayersIntoList();
       updateTabCounts();
       renderChatList();
     } catch (err) {
       console.warn("No se pudo cargar la lista de tickets:", err);
+      // Igual mostramos los chats de prueba aunque el backend no responda.
+      mergeTestPlayersIntoList();
+      updateTabCounts();
+      renderChatList();
     }
   }
 
@@ -641,6 +732,12 @@
 
   async function loadConversation(){
     if (!currentTicket) return;
+
+    if (isTestTicket(currentTicket)){
+      renderTestConversation();
+      return;
+    }
+
     try {
       const res = await fetch("/api/admin/players/" + encodeURIComponent(currentTicket), { headers: apiHeaders() });
       if (!res.ok) return;
@@ -681,6 +778,34 @@
     }
   }
 
+  function renderTestConversation(){
+    const p = testPlayers[currentTicket];
+    if (!p) return;
+
+    document.getElementById("conv-name").textContent = "🧪 " + (p.verified ? (p.nickname || p.name) : ("Nº " + p.ticket));
+    document.getElementById("conv-sub").textContent = "SteamID64: " + p.steamId64 + (p.verified ? " · Verificado" : " · Pendiente de verificación") + " · CHAT DE PRUEBA";
+
+    const verifyBtn = document.getElementById("verify-btn");
+    verifyBtn.disabled = p.verified;
+    verifyBtn.textContent = p.verified ? "✓ Verificado" : "✓ Verificar cuenta";
+
+    currentPlayerRole = p.role || "PLAYER";
+    const staffBtn = document.getElementById("staff-btn");
+    staffBtn.style.display = "";
+    staffBtn.textContent = currentPlayerRole === "STAFF" ? "★ Quitar STAFF" : "★ Hacer STAFF";
+
+    const box = document.getElementById("conv-messages");
+    const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+    box.innerHTML = (p.messages || []).map(m => {
+      const cls = m.from === "player" ? "from-player" : (m.from === "admin" ? "from-admin" : "from-system");
+      const who = m.from === "admin" ? (m.by || "STAFF") : "";
+      return `<div class="bubble ${cls}">${escapeHtml(m.text)}<span class="bubble-meta">${who ? who + " · " : ""}${new Date(m.at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>`;
+    }).join("");
+    if (wasAtBottom) box.scrollTop = box.scrollHeight;
+
+    updateTabCounts();
+  }
+
   async function sendAdminMessage(e){
     e.preventDefault();
     if (!currentTicket) return false;
@@ -688,6 +813,20 @@
     const text = input.value.trim();
     if (!text) return false;
     input.value = "";
+
+    if (isTestTicket(currentTicket)){
+      const p = testPlayers[currentTicket];
+      if (p){
+        const now = new Date().toISOString();
+        p.messages.push({ from: "admin", by: adminName || "STAFF", text, at: now });
+        p.updatedAt = now;
+        mergeTestPlayersIntoList();
+        renderChatList();
+        renderTestConversation();
+      }
+      return false;
+    }
+
     try {
       await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/messages", {
         method: "POST",
@@ -705,6 +844,21 @@
   async function verifyCurrentPlayer(){
     if (!currentTicket) return;
     if (!confirm("¿Confirmás que verificaste a este jugador?")) return;
+
+    if (isTestTicket(currentTicket)){
+      const p = testPlayers[currentTicket];
+      if (p){
+        const now = new Date().toISOString();
+        p.verified = true;
+        p.messages.push({ from: "system", text: "✅ Tu cuenta fue verificada por el STAFF.", at: now });
+        p.updatedAt = now;
+        mergeTestPlayersIntoList();
+        renderChatList();
+        renderTestConversation();
+      }
+      return;
+    }
+
     try {
       await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/verify", {
         method: "POST",
@@ -724,6 +878,20 @@
       ? "¿Darle rol STAFF a este jugador? Va a poder entrar al Menú Admin."
       : "¿Quitarle el rol STAFF a este jugador?";
     if (!confirm(msg)) return;
+
+    if (isTestTicket(currentTicket)){
+      const p = testPlayers[currentTicket];
+      if (p){
+        p.role = nextRole;
+        p.updatedAt = new Date().toISOString();
+        currentPlayerRole = nextRole;
+        mergeTestPlayersIntoList();
+        renderChatList();
+        renderTestConversation();
+      }
+      return;
+    }
+
     try {
       const res = await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/role", {
         method: "POST",
