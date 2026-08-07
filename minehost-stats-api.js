@@ -11,18 +11,9 @@ function env(name) {
 
 app.use(express.json());
 
-// Sirve los archivos estáticos (index.html, css, js, etc.) que estén
-// en la raíz del repo, al lado de este archivo.
 app.use(express.static(__dirname));
 
-/* =========================================================
-   CONEXIÓN A MONGODB ATLAS
-   Antes esto se guardaba en un archivo JSON en disco
-   (data/players.json), pero en el free tier de Render el
-   disco se resetea en cada deploy y se perdían todos los
-   jugadores verificados. Ahora se persiste en MongoDB Atlas,
-   que sobrevive a los redeploys.
-========================================================= */
+
 const MONGODB_URI = env("MONGODB_URI");
 let playersCol = null;
 
@@ -32,10 +23,10 @@ async function connectDB() {
     return;
   }
   const client = new MongoClient(MONGODB_URI, {
-    family: 4 // fuerza IPv4: evita fallos de TLS/handshake típicos de Render con IPv6
+    family: 4 
   });
   await client.connect();
-  const db = client.db(); // usa la base indicada en el connection string
+  const db = client.db(); 
   playersCol = db.collection("players");
   await playersCol.createIndex({ ticket: 1 }, { unique: true });
   await playersCol.createIndex({ steamId64: 1 }, { unique: true });
@@ -50,14 +41,6 @@ function findBySteamId(steamId64) {
   return playersCol.findOne({ steamId64 });
 }
 
-/* =========================================================
-   AUTENTICACIÓN DE ADMIN / STAFF
-   - x-admin-key: código maestro (ADMIN_AUTH_CODE), acceso total.
-   - x-staff-steamid: SteamID64 de un jugador verificado cuyo
-     "role" en la base de datos sea STAFF o ADMIN. Así, cualquier
-     jugador al que le den ese rol puede entrar al Menú Admin
-     sin necesitar el código maestro.
-========================================================= */
 const ADMIN_AUTH_CODE = env("ADMIN_AUTH_CODE") || "9912938414112";
 
 function requireAdmin(req, res, next) {
@@ -86,9 +69,6 @@ async function requireStaff(req, res, next) {
   return res.status(401).json({ error: "No autorizado" });
 }
 
-/* =========================================================
-   REGISTRO — crea el jugador pendiente y su chat automáticamente
-========================================================= */
 app.post("/api/register", async (req, res) => {
   try {
     const { steamId, steamId64, password, nickname } = req.body || {};
@@ -97,7 +77,6 @@ app.post("/api/register", async (req, res) => {
       return res.status(400).json({ error: "Falta el SteamID64" });
     }
 
-    // --- Pedirle un número de ticket al bot de Discord ---
     const botTicketUrl = env("BOT_TICKET_URL");
     const botApiKey = env("BOT_API_KEY");
     let ticket = null;
@@ -127,8 +106,6 @@ app.post("/api/register", async (req, res) => {
 
     const now = new Date().toISOString();
 
-    // Si ya existía un registro pendiente para ese SteamID, lo reciclamos
-    // en vez de crear un chat duplicado.
     const existing = await findBySteamId(idJugador);
     if (existing) {
       const oldTicket = existing.ticket;
