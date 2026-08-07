@@ -445,6 +445,66 @@
     .conv-back{ display:inline-block !important; }
   }
   .conv-back{ display:none; margin-right:4px; background:none; border:none; color:var(--text-mid); font-size:18px; cursor:pointer; }
+
+  /* ---------- language selector ---------- */
+  .lang-select{
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    z-index: 1100;
+  }
+  .lang-btn{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight:500;
+    color: var(--text-mid);
+    border: 1px solid var(--line);
+    padding: 6px 12px 6px 6px;
+    border-radius: 7px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .lang-btn:hover{ color: var(--text-hi); border-color: var(--cyan); background: var(--bg-panel-2); }
+  .lang-logo{ width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex: 0 0 auto; }
+  .lang-caret{ font-size: 10px; color: var(--text-low); transition: transform .15s ease; }
+  .lang-select.is-open .lang-caret{ transform: rotate(180deg); }
+  .lang-menu{
+    position:absolute;
+    top: calc(100% + 8px);
+    right:0;
+    min-width: 150px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    overflow:hidden;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+    opacity:0;
+    transform: translateY(-6px);
+    pointer-events:none;
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .lang-select.is-open .lang-menu{ opacity:1; transform: translateY(0); pointer-events:auto; }
+  .lang-option{
+    display:flex;
+    align-items:center;
+    gap: 9px;
+    padding: 10px 13px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:600;
+    font-size: 14px;
+    color: var(--text-mid);
+    cursor:pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .lang-option:hover{ background: var(--bg-panel-2); color: var(--text-hi); }
+  .lang-option.is-selected{ color: var(--cyan); }
+  .lang-flag{ font-size: 15px; }
 </style>
 </head>
 <body>
@@ -452,38 +512,53 @@
   <div class="bg-glow"></div>
   <div class="bg-grid"></div>
 
+  <!-- ---------- LANGUAGE SELECTOR ---------- -->
+  <div class="lang-select" id="lang-select">
+    <button class="lang-btn" onclick="toggleLangMenu()">
+      <img class="lang-logo" src="nexus-logo.png" alt="Nexus">
+      <span id="lang-current-code">ES</span>
+      <span class="lang-caret">▾</span>
+    </button>
+    <div class="lang-menu" id="lang-menu">
+      <div class="lang-option" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span>English</div>
+      <div class="lang-option is-selected" data-lang="es" onclick="setLang('es')"><span class="lang-flag">🇪🇸</span>Español</div>
+      <div class="lang-option" data-lang="pt" onclick="setLang('pt')"><span class="lang-flag">🇧🇷</span>Brazil</div>
+      <div class="lang-option" data-lang="pl" onclick="setLang('pl')"><span class="lang-flag">🇵🇱</span>Polaco</div>
+    </div>
+  </div>
+
   <!-- ---------- LOCK: solo staff logueado ---------- -->
   <div class="lock-screen" id="lock-screen">
     <div class="lock-icon">🔒</div>
-    <div class="lock-title">Acceso restringido</div>
-    <div class="lock-text">Este panel es solo para el STAFF de NEXUS. Iniciá sesión como administrador desde el sitio principal.</div>
-    <button class="lock-btn" onclick="window.location.href='index.html'">Ir al login</button>
+    <div class="lock-title" data-i18n="lock_title">Acceso restringido</div>
+    <div class="lock-text" data-i18n="lock_text">Este panel es solo para el STAFF de NEXUS. Iniciá sesión como administrador desde el sitio principal.</div>
+    <button class="lock-btn" data-i18n="lock_btn" onclick="window.location.href='index.html'">Ir al login</button>
   </div>
 
   <div class="app" id="app" style="display:none;">
     <!-- ---------- SIDEBAR: lista de chats ---------- -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-head">
-        <a class="sidebar-back" href="index.html" title="Volver">←</a>
+        <a class="sidebar-back" href="index.html" data-i18n-title="sidebar_back">←</a>
         <img class="sidebar-logo" src="nexus-logo.png" alt="Nexus">
-        <div class="sidebar-title">Menu Admin<small>TICKETS &amp; CHATS</small></div>
+        <div class="sidebar-title" data-i18n="sidebar_title">Menu Admin<small data-i18n="sidebar_subtitle">TICKETS &amp; CHATS</small></div>
         <div class="sidebar-identity" id="sidebar-identity">—</div>
       </div>
 
       <div class="sidebar-tabs">
-        <div class="sidebar-tab is-active" id="tab-pending" onclick="setTab('pending')">Pendientes<span class="count" id="count-pending">0</span></div>
-        <div class="sidebar-tab" id="tab-verified" onclick="setTab('verified')">Verificados<span class="count" id="count-verified">0</span></div>
-        <div class="sidebar-tab" id="tab-all" onclick="setTab('all')">Todos<span class="count" id="count-all">0</span></div>
+        <div class="sidebar-tab is-active" id="tab-pending" onclick="setTab('pending')"><span data-i18n="tab_pending">Pendientes</span><span class="count" id="count-pending">0</span></div>
+        <div class="sidebar-tab" id="tab-verified" onclick="setTab('verified')"><span data-i18n="tab_verified">Verificados</span><span class="count" id="count-verified">0</span></div>
+        <div class="sidebar-tab" id="tab-all" onclick="setTab('all')"><span data-i18n="tab_all">Todos</span><span class="count" id="count-all">0</span></div>
       </div>
 
       <div class="sidebar-search">
-        <input type="text" id="search-input" placeholder="Buscar ticket o SteamID64…" oninput="renderChatList()">
+        <input type="text" id="search-input" data-i18n-ph="search_ph" placeholder="Buscar ticket o SteamID64…" oninput="renderChatList()">
       </div>
 
-      <button class="test-chat-btn" type="button" onclick="addTestChat()">🧪 Crear chat de prueba</button>
+      <button class="test-chat-btn" type="button" onclick="addTestChat()" data-i18n="test_chat_btn">🧪 Crear chat de prueba</button>
 
       <div class="chat-list" id="chat-list">
-        <div class="chat-list-empty">Cargando tickets…</div>
+        <div class="chat-list-empty" data-i18n="loading_tickets">Cargando tickets…</div>
       </div>
     </div>
 
@@ -491,7 +566,7 @@
     <div class="conversation" id="conversation">
       <div class="conv-empty" id="conv-empty">
         <div class="conv-empty-icon">💬</div>
-        <div>Elegí un chat de la izquierda para empezar</div>
+        <div data-i18n="conv_empty">Elegí un chat de la izquierda para empezar</div>
       </div>
 
       <div id="conv-active" style="display:none; flex:1; flex-direction:column; min-height:0;">
@@ -510,7 +585,7 @@
         <div class="conv-messages" id="conv-messages"></div>
 
         <form class="conv-form" onsubmit="return sendAdminMessage(event)">
-          <input class="conv-input" id="conv-input" type="text" placeholder="Escribí un mensaje…" autocomplete="off">
+          <input class="conv-input" id="conv-input" data-i18n-ph="msg_ph" type="text" placeholder="Escribí un mensaje…" autocomplete="off">
           <button class="conv-send" type="submit">➤</button>
         </form>
       </div>
@@ -522,6 +597,218 @@
   const ADMIN_STORAGE_KEY = "nexus_admin_identity";
   const STAFF_STEAMID_KEY = "nexus_staff_steamid"; // SteamID64 de un jugador con rol STAFF/ADMIN
   const GATE_STORAGE_KEY = "nexus_gate_steamid";
+
+  /* ============ IDIOMA ============ */
+  const I18N = {
+    en: {
+      code: "EN",
+      lock_title: "Restricted access",
+      lock_text: "This panel is only for NEXUS STAFF. Log in as an administrator from the main site.",
+      lock_btn: "Go to login",
+      sidebar_title: "Admin Menu",
+      sidebar_subtitle: "TICKETS & CHATS",
+      sidebar_back: "Back",
+      tab_pending: "Pending",
+      tab_verified: "Verified",
+      tab_all: "All",
+      search_ph: "Search by ticket or SteamID64…",
+      test_chat_btn: "🧪 Create test chat",
+      loading_tickets: "Loading tickets…",
+      conv_empty: "Pick a chat on the left to get started",
+      msg_ph: "Write a message…",
+      no_chats: "No chats here.",
+      no_messages: "No messages yet",
+      you_prefix: "You: ",
+      just_now: "now",
+      steamid_label: "SteamID64: ",
+      verified_suffix: " · Verified",
+      pending_suffix: " · Pending verification",
+      test_chat_suffix: " · TEST CHAT",
+      verify_btn_default: "✓ Verify account",
+      verify_btn_done: "✓ Verified",
+      staff_btn_make: "★ Make STAFF",
+      staff_btn_remove: "★ Remove STAFF",
+      confirm_verify: "Confirm you verified this player?",
+      confirm_staff_add: "Give this player the STAFF role? They'll be able to enter the Admin Menu.",
+      confirm_staff_remove: "Remove the STAFF role from this player?",
+      alert_role_error: "Couldn't change the role (are you logged in with the master code?)."
+    },
+    es: {
+      code: "ES",
+      lock_title: "Acceso restringido",
+      lock_text: "Este panel es solo para el STAFF de NEXUS. Iniciá sesión como administrador desde el sitio principal.",
+      lock_btn: "Ir al login",
+      sidebar_title: "Menu Admin",
+      sidebar_subtitle: "TICKETS & CHATS",
+      sidebar_back: "Volver",
+      tab_pending: "Pendientes",
+      tab_verified: "Verificados",
+      tab_all: "Todos",
+      search_ph: "Buscar ticket o SteamID64…",
+      test_chat_btn: "🧪 Crear chat de prueba",
+      loading_tickets: "Cargando tickets…",
+      conv_empty: "Elegí un chat de la izquierda para empezar",
+      msg_ph: "Escribí un mensaje…",
+      no_chats: "No hay chats acá.",
+      no_messages: "Sin mensajes todavía",
+      you_prefix: "Vos: ",
+      just_now: "ahora",
+      steamid_label: "SteamID64: ",
+      verified_suffix: " · Verificado",
+      pending_suffix: " · Pendiente de verificación",
+      test_chat_suffix: " · CHAT DE PRUEBA",
+      verify_btn_default: "✓ Verificar cuenta",
+      verify_btn_done: "✓ Verificado",
+      staff_btn_make: "★ Hacer STAFF",
+      staff_btn_remove: "★ Quitar STAFF",
+      confirm_verify: "¿Confirmás que verificaste a este jugador?",
+      confirm_staff_add: "¿Darle rol STAFF a este jugador? Va a poder entrar al Menú Admin.",
+      confirm_staff_remove: "¿Quitarle el rol STAFF a este jugador?",
+      alert_role_error: "No se pudo cambiar el rol (¿estás logueado con el código maestro?)."
+    },
+    pt: {
+      code: "PT",
+      lock_title: "Acesso restrito",
+      lock_text: "Este painel é só para o STAFF da NEXUS. Faça login como administrador pelo site principal.",
+      lock_btn: "Ir para o login",
+      sidebar_title: "Menu Admin",
+      sidebar_subtitle: "TICKETS & CHATS",
+      sidebar_back: "Voltar",
+      tab_pending: "Pendentes",
+      tab_verified: "Verificados",
+      tab_all: "Todos",
+      search_ph: "Buscar por ticket ou SteamID64…",
+      test_chat_btn: "🧪 Criar chat de teste",
+      loading_tickets: "Carregando tickets…",
+      conv_empty: "Escolha um chat à esquerda para começar",
+      msg_ph: "Escreva uma mensagem…",
+      no_chats: "Nenhum chat aqui.",
+      no_messages: "Ainda sem mensagens",
+      you_prefix: "Você: ",
+      just_now: "agora",
+      steamid_label: "SteamID64: ",
+      verified_suffix: " · Verificado",
+      pending_suffix: " · Pendente de verificação",
+      test_chat_suffix: " · CHAT DE TESTE",
+      verify_btn_default: "✓ Verificar conta",
+      verify_btn_done: "✓ Verificado",
+      staff_btn_make: "★ Tornar STAFF",
+      staff_btn_remove: "★ Remover STAFF",
+      confirm_verify: "Confirma que verificou este jogador?",
+      confirm_staff_add: "Dar o cargo de STAFF a este jogador? Ele vai poder entrar no Menu Admin.",
+      confirm_staff_remove: "Remover o cargo de STAFF deste jogador?",
+      alert_role_error: "Não foi possível mudar o cargo (você está logado com o código mestre?)."
+    },
+    pl: {
+      code: "PL",
+      lock_title: "Dostęp ograniczony",
+      lock_text: "Ten panel jest tylko dla STAFFU NEXUS. Zaloguj się jako administrator z głównej strony.",
+      lock_btn: "Przejdź do logowania",
+      sidebar_title: "Menu Admin",
+      sidebar_subtitle: "TICKETY I CZATY",
+      sidebar_back: "Wróć",
+      tab_pending: "Oczekujące",
+      tab_verified: "Zweryfikowani",
+      tab_all: "Wszyscy",
+      search_ph: "Szukaj po ticketcie lub SteamID64…",
+      test_chat_btn: "🧪 Utwórz czat testowy",
+      loading_tickets: "Ładowanie ticketów…",
+      conv_empty: "Wybierz czat po lewej, aby zacząć",
+      msg_ph: "Napisz wiadomość…",
+      no_chats: "Nie ma tu czatów.",
+      no_messages: "Jeszcze brak wiadomości",
+      you_prefix: "Ty: ",
+      just_now: "teraz",
+      steamid_label: "SteamID64: ",
+      verified_suffix: " · Zweryfikowany",
+      pending_suffix: " · Oczekuje na weryfikację",
+      test_chat_suffix: " · CZAT TESTOWY",
+      verify_btn_default: "✓ Zweryfikuj konto",
+      verify_btn_done: "✓ Zweryfikowany",
+      staff_btn_make: "★ Nadaj STAFF",
+      staff_btn_remove: "★ Odbierz STAFF",
+      confirm_verify: "Potwierdzasz, że zweryfikowałeś tego gracza?",
+      confirm_staff_add: "Nadać temu graczowi rolę STAFF? Będzie mógł wejść do Menu Admin.",
+      confirm_staff_remove: "Odebrać temu graczowi rolę STAFF?",
+      alert_role_error: "Nie udało się zmienić roli (czy jesteś zalogowany kodem mistrzowskim?)."
+    }
+  };
+
+  let currentLang = "es";
+
+  function T(key){
+    const dict = I18N[currentLang] || I18N.es;
+    return dict[key] != null ? dict[key] : (I18N.es[key] || key);
+  }
+
+  function setLang(lang, isInitial){
+    const dict = I18N[lang];
+    if (!dict) return;
+    currentLang = lang;
+
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      if (!dict[key]) return;
+      // Reemplaza solo el primer nodo de texto para no pisar elementos hijos (ej: el <small> del título).
+      let target = null;
+      for (const node of el.childNodes){
+        if (node.nodeType === Node.TEXT_NODE){ target = node; break; }
+      }
+      if (target) target.textContent = dict[key];
+      else el.textContent = dict[key];
+    });
+
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+      const key = el.getAttribute("data-i18n-ph");
+      if (dict[key]) el.placeholder = dict[key];
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach(el => {
+      const key = el.getAttribute("data-i18n-title");
+      if (dict[key]) el.title = dict[key];
+    });
+
+    document.getElementById("lang-current-code").textContent = dict.code;
+    document.querySelectorAll(".lang-option").forEach(o => {
+      o.classList.toggle("is-selected", o.dataset.lang === lang);
+    });
+    document.getElementById("lang-select").classList.remove("is-open");
+
+    // Refresca todo lo que arma texto dinámicamente en el idioma nuevo (pero no
+    // en la carga inicial: ahí todavía no llegó la respuesta de refreshChatList()
+    // y pisaríamos el "Cargando tickets…" con un "No hay chats acá." falso).
+    if (!isInitial){
+      renderChatList();
+      if (currentTicket){
+        if (isTestTicket(currentTicket)) renderTestConversation();
+        else loadConversation();
+      }
+      const verifyBtn = document.getElementById("verify-btn");
+      if (verifyBtn && verifyBtn.disabled) verifyBtn.textContent = T("verify_btn_done");
+      else if (verifyBtn) verifyBtn.textContent = T("verify_btn_default");
+      const staffBtn = document.getElementById("staff-btn");
+      if (staffBtn && staffBtn.style.display !== "none"){
+        staffBtn.textContent = currentPlayerRole === "STAFF" ? T("staff_btn_remove") : T("staff_btn_make");
+      }
+    }
+
+    try { localStorage.setItem("nexus_admin_lang", lang); } catch (err) {}
+  }
+
+  function toggleLangMenu(){
+    document.getElementById("lang-select").classList.toggle("is-open");
+  }
+
+  document.addEventListener("click", (e) => {
+    const wrap = document.getElementById("lang-select");
+    if (wrap && !wrap.contains(e.target)) wrap.classList.remove("is-open");
+  });
+
+  function initLang(){
+    let saved = null;
+    try { saved = localStorage.getItem("nexus_admin_lang"); } catch (err) {}
+    setLang(saved && I18N[saved] ? saved : "es", true);
+  }
 
   let adminKey = null;
   let adminName = null;
@@ -665,7 +952,7 @@
     if (!iso) return "";
     const diffMs = Date.now() - new Date(iso).getTime();
     const mins = Math.floor(diffMs / 60000);
-    if (mins < 1) return "ahora";
+    if (mins < 1) return T("just_now");
     if (mins < 60) return mins + "m";
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return hrs + "h";
@@ -688,13 +975,13 @@
     }
 
     if (!items.length){
-      list.innerHTML = '<div class="chat-list-empty">No hay chats acá.</div>';
+      list.innerHTML = `<div class="chat-list-empty">${escapeHtml(T("no_chats"))}</div>`;
       return;
     }
 
     list.innerHTML = items.map(p => {
       const initials = p.verified ? (p.displayName || "?").slice(0,2).toUpperCase() : "🎫";
-      const preview = p.lastMessageFrom === "admin" ? `<span class="from-admin-tag">Vos: </span>${escapeHtml(p.lastMessage)}` : escapeHtml(p.lastMessage || "Sin mensajes todavía");
+      const preview = p.lastMessageFrom === "admin" ? `<span class="from-admin-tag">${escapeHtml(T("you_prefix"))}</span>${escapeHtml(p.lastMessage)}` : escapeHtml(p.lastMessage || T("no_messages"));
       return `
         <div class="chat-item ${p.ticket === currentTicket ? 'is-selected' : ''}" onclick="openConversation('${p.ticket}')">
           <div class="chat-avatar ${p.verified ? 'is-verified' : ''}">${initials}<span class="status-dot ${p.verified ? 'is-verified' : ''}"></span></div>
@@ -746,11 +1033,11 @@
       if (!p) return;
 
       document.getElementById("conv-name").textContent = p.verified ? (p.nickname || p.name) : ("Nº " + p.ticket);
-      document.getElementById("conv-sub").textContent = "SteamID64: " + p.steamId64 + (p.verified ? " · Verificado" : " · Pendiente de verificación");
+      document.getElementById("conv-sub").textContent = T("steamid_label") + p.steamId64 + (p.verified ? T("verified_suffix") : T("pending_suffix"));
 
       const verifyBtn = document.getElementById("verify-btn");
       verifyBtn.disabled = p.verified;
-      verifyBtn.textContent = p.verified ? "✓ Verificado" : "✓ Verificar cuenta";
+      verifyBtn.textContent = p.verified ? T("verify_btn_done") : T("verify_btn_default");
 
       // Asignar rol STAFF solo lo puede hacer el admin maestro (código),
       // no otro STAFF, para evitar que se auto-asciendan entre ellos.
@@ -758,7 +1045,7 @@
       currentPlayerRole = p.role || "PLAYER";
       if (adminKey && p.verified){
         staffBtn.style.display = "";
-        staffBtn.textContent = currentPlayerRole === "STAFF" ? "★ Quitar STAFF" : "★ Hacer STAFF";
+        staffBtn.textContent = currentPlayerRole === "STAFF" ? T("staff_btn_remove") : T("staff_btn_make");
       } else {
         staffBtn.style.display = "none";
       }
@@ -783,16 +1070,16 @@
     if (!p) return;
 
     document.getElementById("conv-name").textContent = "🧪 " + (p.verified ? (p.nickname || p.name) : ("Nº " + p.ticket));
-    document.getElementById("conv-sub").textContent = "SteamID64: " + p.steamId64 + (p.verified ? " · Verificado" : " · Pendiente de verificación") + " · CHAT DE PRUEBA";
+    document.getElementById("conv-sub").textContent = T("steamid_label") + p.steamId64 + (p.verified ? T("verified_suffix") : T("pending_suffix")) + T("test_chat_suffix");
 
     const verifyBtn = document.getElementById("verify-btn");
     verifyBtn.disabled = p.verified;
-    verifyBtn.textContent = p.verified ? "✓ Verificado" : "✓ Verificar cuenta";
+    verifyBtn.textContent = p.verified ? T("verify_btn_done") : T("verify_btn_default");
 
     currentPlayerRole = p.role || "PLAYER";
     const staffBtn = document.getElementById("staff-btn");
     staffBtn.style.display = "";
-    staffBtn.textContent = currentPlayerRole === "STAFF" ? "★ Quitar STAFF" : "★ Hacer STAFF";
+    staffBtn.textContent = currentPlayerRole === "STAFF" ? T("staff_btn_remove") : T("staff_btn_make");
 
     const box = document.getElementById("conv-messages");
     const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
@@ -843,7 +1130,7 @@
 
   async function verifyCurrentPlayer(){
     if (!currentTicket) return;
-    if (!confirm("¿Confirmás que verificaste a este jugador?")) return;
+    if (!confirm(T("confirm_verify"))) return;
 
     if (isTestTicket(currentTicket)){
       const p = testPlayers[currentTicket];
@@ -874,9 +1161,7 @@
   async function toggleStaffCurrentPlayer(){
     if (!currentTicket) return;
     const nextRole = currentPlayerRole === "STAFF" ? "PLAYER" : "STAFF";
-    const msg = nextRole === "STAFF"
-      ? "¿Darle rol STAFF a este jugador? Va a poder entrar al Menú Admin."
-      : "¿Quitarle el rol STAFF a este jugador?";
+    const msg = nextRole === "STAFF" ? T("confirm_staff_add") : T("confirm_staff_remove");
     if (!confirm(msg)) return;
 
     if (isTestTicket(currentTicket)){
@@ -899,7 +1184,7 @@
         body: JSON.stringify({ role: nextRole })
       });
       if (!res.ok){
-        alert("No se pudo cambiar el rol (¿estás logueado con el código maestro?).");
+        alert(T("alert_role_error"));
         return;
       }
       loadConversation();
@@ -908,6 +1193,8 @@
       console.warn("No se pudo cambiar el rol:", err);
     }
   }
+
+  initLang();
 </script>
 </body>
 </html>

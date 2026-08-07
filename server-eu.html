@@ -682,7 +682,7 @@
         steamId64: steamId64,
         name: steamId64,
         avatarUrl: "nexus-logo.png",
-        nationality: "STAFF",
+        nationality: "Argentina",
         verified: true,
         kills: "\u2014",
         deaths: "\u2014",
@@ -715,17 +715,27 @@
     loadProfileData(steamId64);
   }
 
-  async function loadProfileData(steamId64){
+  // Reintenta varias veces: si el fetch falla una sola vez (backend recién
+  // despertando, hipo de red, etc.) no queremos que el jugador se quede
+  // pegado viendo "En Progreso" hasta que recargue la página a mano.
+  async function loadProfileData(steamId64, attempt){
+    attempt = attempt || 1;
     try {
-      const res = await fetch(PROFILE_ENDPOINT + "?steamId64=" + encodeURIComponent(steamId64));
-      if (!res.ok) throw new Error("bad response");
+      const res = await fetch(PROFILE_ENDPOINT + "?steamId64=" + encodeURIComponent(steamId64), { cache: "no-store" });
+      if (!res.ok) throw new Error("bad response " + res.status);
       const data = await res.json();
       data.steamId64 = steamId64;
       renderProfile(data);
       try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data)); } catch (err) {}
     } catch (err) {
-      // Todavía no configuraste PROFILE_ENDPOINT: se queda con el placeholder / último dato cacheado.
-      console.warn("No se pudo cargar el perfil desde el backend:", err);
+      if (attempt < 4){
+        setTimeout(() => loadProfileData(steamId64, attempt + 1), attempt * 900);
+      } else {
+        // Se quedó con el placeholder / último dato cacheado (ver showProfileChip),
+        // pero avisamos fuerte en consola porque esto es lo que hace que el
+        // badge muestre "En Progreso" de más aunque el jugador ya esté verificado.
+        console.error("No se pudo cargar el perfil desde el backend tras varios intentos:", err);
+      }
     }
   }
 
