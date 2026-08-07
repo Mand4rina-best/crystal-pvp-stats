@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS // MENU</title>
+<title>NEXUS: SERVER / MENU </title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1351,6 +1351,94 @@
     font-size: 14px;
   }
   .gate-chat-send:hover{ background: var(--bg-panel); }
+
+  /* ---------- botón flotante de soporte (abajo a la derecha) ---------- */
+  .support-fab{
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 40;
+    display:flex;
+    align-items:center;
+    gap: 9px;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight:700;
+    letter-spacing: .5px;
+    color:#fff;
+    border:none;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg,#e0453c,#ff6b5e);
+    box-shadow: 0 4px 18px rgba(224,69,60,.4);
+    cursor:pointer;
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .support-fab:hover{ transform: translateY(-2px); box-shadow: 0 6px 22px rgba(224,69,60,.55); }
+  .support-fab-icon{ font-size:15px; }
+
+  .support-panel{
+    display:none;
+    position: fixed;
+    right: 22px;
+    bottom: 84px;
+    z-index: 40;
+    width: 320px;
+    max-width: calc(100vw - 44px);
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--bg-panel);
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+    overflow:hidden;
+    backdrop-filter: blur(8px);
+  }
+  .support-panel.is-open{ display:block; }
+  .support-panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-panel-2);
+  }
+  .support-panel-title{
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 14px;
+    color: var(--text-hi);
+  }
+  .support-panel-close{
+    background:none;
+    border:none;
+    color: var(--text-mid);
+    font-size: 16px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .support-panel-close:hover{ color: var(--cyan); }
+  .support-panel-body{ padding: 12px 14px; }
+  .support-panel-empty{
+    font-size: 12.5px;
+    color: var(--text-mid);
+    line-height:1.5;
+    text-align:center;
+    padding: 10px 4px 4px;
+  }
+  .support-panel-login-btn{
+    width:100%;
+    margin-top: 12px;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--line);
+    color: var(--text-hi);
+    border-radius: 9px;
+    padding: 10px 16px;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size: 13px;
+    cursor:pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .support-panel-login-btn:hover{ border-color: var(--cyan); color: var(--cyan); }
 </style>
 </head>
 <body>
@@ -1508,6 +1596,32 @@
       <span>Menu Admin</span>
       <span class="menu-admin-badge" id="menu-admin-badge">0</span>
     </a>
+
+    <!-- ---------- SOPORTE (abajo a la derecha, para cualquier visitante) ---------- -->
+    <button class="support-fab" id="support-fab" onclick="toggleSupportPanel()">
+      <span class="support-fab-icon">💬</span>
+      <span>Soporte</span>
+    </button>
+
+    <div class="support-panel" id="support-panel">
+      <div class="support-panel-head">
+        <div class="support-panel-title">Hablar con el STAFF</div>
+        <button class="support-panel-close" type="button" onclick="toggleSupportPanel(false)">✕</button>
+      </div>
+      <div class="support-panel-body">
+        <div id="support-panel-logged-out">
+          <div class="support-panel-empty">Iniciá sesión o registrate primero para poder chatear directo con el STAFF.</div>
+          <button class="support-panel-login-btn" type="button" onclick="openSupportGate()">Iniciar sesión</button>
+        </div>
+        <div id="support-panel-chat" style="display:none;">
+          <div class="gate-chat-messages" id="support-chat-messages"></div>
+          <form class="gate-chat-form" onsubmit="return sendSupportChatMessage(event)">
+            <input class="gate-chat-input" id="support-chat-input" type="text" placeholder="Escribí un mensaje…" autocomplete="off">
+            <button class="gate-chat-send" type="submit">➤</button>
+          </form>
+        </div>
+      </div>
+    </div>
 
     <!-- ---------- LANGUAGE SELECTOR ---------- -->
     <div class="lang-select" id="lang-select">
@@ -1796,6 +1910,95 @@
       loadPendingChat();
     } catch (err) {}
     return false;
+  }
+
+  /* ============ BOTÓN FLOTANTE DE SOPORTE (chat con el STAFF, visible siempre) ============ */
+  // Reutiliza el mismo ticket/chat que ya se crea en el registro (GATE_TICKET_KEY),
+  // así el jugador tiene una sola conversación con el STAFF sin importar desde
+  // qué botón la abrió.
+  let supportChatPoll = null;
+
+  function toggleSupportPanel(force){
+    const panel = document.getElementById("support-panel");
+    const opening = typeof force === "boolean" ? force : !panel.classList.contains("is-open");
+    panel.classList.toggle("is-open", opening);
+    if (opening){
+      refreshSupportPanelState();
+    } else {
+      stopSupportChatPolling();
+    }
+  }
+
+  function stopSupportChatPolling(){
+    if (supportChatPoll){ clearInterval(supportChatPoll); supportChatPoll = null; }
+  }
+
+  function refreshSupportPanelState(){
+    let ticket = null;
+    try { ticket = localStorage.getItem(GATE_TICKET_KEY); } catch (err) {}
+    const loggedOutBox = document.getElementById("support-panel-logged-out");
+    const chatBox = document.getElementById("support-panel-chat");
+    if (!ticket){
+      loggedOutBox.style.display = "block";
+      chatBox.style.display = "none";
+      return;
+    }
+    loggedOutBox.style.display = "none";
+    chatBox.style.display = "block";
+    loadSupportChat();
+    stopSupportChatPolling();
+    supportChatPoll = setInterval(loadSupportChat, 5000);
+  }
+
+  function renderSupportChatMessages(messages){
+    const list = document.getElementById("support-chat-messages");
+    if (!list) return;
+    list.innerHTML = (messages || []).map(m => {
+      const cls = m.from === "player" ? "from-player" : (m.from === "admin" ? "from-admin" : "from-system");
+      const safe = String(m.text || "").replace(/</g, "&lt;");
+      return `<div class="gate-chat-msg ${cls}">${safe}</div>`;
+    }).join("");
+    list.scrollTop = list.scrollHeight;
+  }
+
+  async function loadSupportChat(){
+    let ticket = null;
+    try { ticket = localStorage.getItem(GATE_TICKET_KEY); } catch (err) {}
+    if (!ticket) return;
+    try {
+      const res = await fetch("/api/chat/" + encodeURIComponent(ticket) + "/messages");
+      if (!res.ok) return;
+      const data = await res.json();
+      renderSupportChatMessages(data.messages);
+    } catch (err) {}
+  }
+
+  async function sendSupportChatMessage(e){
+    e.preventDefault();
+    const input = document.getElementById("support-chat-input");
+    const text = input.value.trim();
+    if (!text) return false;
+    let ticket = null, steamId64 = null;
+    try {
+      ticket = localStorage.getItem(GATE_TICKET_KEY);
+      steamId64 = localStorage.getItem(GATE_STORAGE_KEY);
+    } catch (err) {}
+    if (!ticket) return false;
+    input.value = "";
+    try {
+      await fetch("/api/chat/" + encodeURIComponent(ticket) + "/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, steamId64 })
+      });
+      loadSupportChat();
+    } catch (err) {}
+    return false;
+  }
+
+  function openSupportGate(){
+    toggleSupportPanel(false);
+    document.getElementById("gate-overlay").classList.remove("is-hidden");
   }
 
   function updateAdminBtnVisibility(){
