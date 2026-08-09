@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 const { MongoClient } = require('mongodb');
 
 const app = express();
@@ -8,6 +9,12 @@ const app = express();
 function env(name) {
   return process.env[name];
 }
+
+// Habilitado porque el frontend (nuu14.com) y este backend (Render) viven
+// en dominios distintos. Si más adelante querés restringirlo a un solo
+// dominio en vez de aceptar cualquiera, cambiá esto por:
+// app.use(cors({ origin: "https://nginx-e3fa4.nuu14.com" }));
+app.use(cors());
 
 app.use(express.json());
 
@@ -287,6 +294,24 @@ app.post("/api/admin/players/:ticket/role", requireAdmin, async (req, res) => {
     { $set: { role, updatedAt: new Date().toISOString() } }
   );
   res.json({ ok: true, role });
+});
+
+/* =========================================================
+   NACIONALIDAD — el STAFF puede editarla desde el panel de
+   Menú Admin (junto a Verificar / Rol).
+========================================================= */
+app.post("/api/admin/players/:ticket/nationality", requireStaff, async (req, res) => {
+  const player = await findByTicket(req.params.ticket);
+  if (!player) return res.status(404).json({ error: "Ticket no encontrado" });
+
+  const { nationality } = req.body || {};
+  const value = nationality && String(nationality).trim() ? String(nationality).trim() : null;
+
+  await playersCol.updateOne(
+    { ticket: req.params.ticket },
+    { $set: { nationality: value, updatedAt: new Date().toISOString() } }
+  );
+  res.json({ ok: true, nationality: value });
 });
 
 const PORT = process.env.PORT || 3000;

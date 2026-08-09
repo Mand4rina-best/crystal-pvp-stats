@@ -361,6 +361,17 @@
   .conv-btn.verify:disabled{ opacity:.5; cursor:default; }
   .conv-btn.discord{ color: var(--text-mid); }
   .conv-btn.discord:hover{ border-color: var(--cyan); color: var(--cyan); }
+  .conv-nat-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight:600;
+    color: var(--text-mid);
+    align-self:center;
+    margin-left: 4px;
+  }
+  .conv-nat-select{ color: var(--amber); border-color: rgba(255,176,32,.35); cursor:pointer; }
+  .conv-nat-select:hover{ background: rgba(255,176,32,.1); }
+  .conv-nat-select:disabled{ opacity:.5; cursor:default; }
 
   .conv-messages{
     flex:1;
@@ -579,6 +590,39 @@
           <div class="conv-head-actions">
             <button class="conv-btn verify" id="verify-btn" onclick="verifyCurrentPlayer()">✓ Verificar cuenta</button>
             <button class="conv-btn verify" id="staff-btn" onclick="toggleStaffCurrentPlayer()" style="display:none;">★ Rol</button>
+            <label class="conv-nat-label" for="nationality-select" data-i18n="nationality_label">Nacionalidad:</label>
+            <select class="conv-btn conv-nat-select" id="nationality-select" onchange="updateNationality()">
+              <option value="">—</option>
+              <option value="Argentina">Argentina</option>
+              <option value="Bolivia">Bolivia</option>
+              <option value="Brasil">Brasil</option>
+              <option value="Chile">Chile</option>
+              <option value="Colombia">Colombia</option>
+              <option value="Costa Rica">Costa Rica</option>
+              <option value="Cuba">Cuba</option>
+              <option value="Ecuador">Ecuador</option>
+              <option value="El Salvador">El Salvador</option>
+              <option value="España">España</option>
+              <option value="Estados Unidos">Estados Unidos</option>
+              <option value="Guatemala">Guatemala</option>
+              <option value="Honduras">Honduras</option>
+              <option value="México">México</option>
+              <option value="Nicaragua">Nicaragua</option>
+              <option value="Panamá">Panamá</option>
+              <option value="Paraguay">Paraguay</option>
+              <option value="Perú">Perú</option>
+              <option value="Portugal">Portugal</option>
+              <option value="Puerto Rico">Puerto Rico</option>
+              <option value="República Dominicana">República Dominicana</option>
+              <option value="Uruguay">Uruguay</option>
+              <option value="Venezuela">Venezuela</option>
+              <option value="Alemania">Alemania</option>
+              <option value="Francia">Francia</option>
+              <option value="Italia">Italia</option>
+              <option value="Polonia">Polonia</option>
+              <option value="Reino Unido">Reino Unido</option>
+              <option value="Otro">Otro</option>
+            </select>
           </div>
         </div>
 
@@ -593,6 +637,13 @@
   </div>
 
 <script>
+  /* ============ URL DEL BACKEND (Render) ============ */
+  // Reemplazá esto por la URL real que te da Render cuando desplegás
+  // minehost-stats-api.js. Ejemplo: "https://assipxa-api.onrender.com"
+  // Sin esto, los fetch a /api/... no van a encontrar el backend porque
+  // este HTML vive en un dominio distinto (nuu14.com).
+  const API_BASE = "https://TU-APP.onrender.com";
+
   const ADMIN_KEY_STORAGE = "nexus_admin_key";
   const ADMIN_STORAGE_KEY = "nexus_admin_identity";
   const STAFF_STEAMID_KEY = "nexus_staff_steamid"; // SteamID64 de un jugador con rol STAFF/ADMIN
@@ -624,6 +675,7 @@
       verified_suffix: " · Verified",
       pending_suffix: " · Pending verification",
       test_chat_suffix: " · TEST CHAT",
+      nationality_label: "Nationality:",
       verify_btn_default: "✓ Verify account",
       verify_btn_done: "✓ Verified",
       staff_btn_make: "★ Make STAFF",
@@ -657,6 +709,7 @@
       verified_suffix: " · Verificado",
       pending_suffix: " · Pendiente de verificación",
       test_chat_suffix: " · CHAT DE PRUEBA",
+      nationality_label: "Nacionalidad:",
       verify_btn_default: "✓ Verificar cuenta",
       verify_btn_done: "✓ Verificado",
       staff_btn_make: "★ Hacer STAFF",
@@ -690,6 +743,7 @@
       verified_suffix: " · Verificado",
       pending_suffix: " · Pendente de verificação",
       test_chat_suffix: " · CHAT DE TESTE",
+      nationality_label: "Nacionalidade:",
       verify_btn_default: "✓ Verificar conta",
       verify_btn_done: "✓ Verificado",
       staff_btn_make: "★ Tornar STAFF",
@@ -723,6 +777,7 @@
       verified_suffix: " · Zweryfikowany",
       pending_suffix: " · Oczekuje na weryfikację",
       test_chat_suffix: " · CZAT TESTOWY",
+      nationality_label: "Narodowość:",
       verify_btn_default: "✓ Zweryfikuj konto",
       verify_btn_done: "✓ Zweryfikowany",
       staff_btn_make: "★ Nadaj STAFF",
@@ -907,7 +962,7 @@
 
   async function refreshChatList(){
     try {
-      const res = await fetch("/api/admin/players", { headers: apiHeaders() });
+      const res = await fetch(API_BASE + "/api/admin/players", { headers: apiHeaders() });
       if (res.status === 401){
         try {
           localStorage.removeItem(ADMIN_KEY_STORAGE);
@@ -1026,7 +1081,7 @@
     }
 
     try {
-      const res = await fetch("/api/admin/players/" + encodeURIComponent(currentTicket), { headers: apiHeaders() });
+      const res = await fetch(API_BASE + "/api/admin/players/" + encodeURIComponent(currentTicket), { headers: apiHeaders() });
       if (!res.ok) return;
       const data = await res.json();
       const p = data.player;
@@ -1049,6 +1104,9 @@
       } else {
         staffBtn.style.display = "none";
       }
+
+      const natSelect = document.getElementById("nationality-select");
+      if (natSelect) natSelect.value = p.nationality || "";
 
       const box = document.getElementById("conv-messages");
       const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
@@ -1080,6 +1138,9 @@
     const staffBtn = document.getElementById("staff-btn");
     staffBtn.style.display = "";
     staffBtn.textContent = currentPlayerRole === "STAFF" ? T("staff_btn_remove") : T("staff_btn_make");
+
+    const natSelect = document.getElementById("nationality-select");
+    if (natSelect) natSelect.value = p.nationality || "";
 
     const box = document.getElementById("conv-messages");
     const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
@@ -1115,7 +1176,7 @@
     }
 
     try {
-      await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/messages", {
+      await fetch(API_BASE + "/api/admin/players/" + encodeURIComponent(currentTicket) + "/messages", {
         method: "POST",
         headers: apiHeaders(true),
         body: JSON.stringify({ text, adminName: adminName || "STAFF" })
@@ -1147,7 +1208,7 @@
     }
 
     try {
-      await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/verify", {
+      await fetch(API_BASE + "/api/admin/players/" + encodeURIComponent(currentTicket) + "/verify", {
         method: "POST",
         headers: apiHeaders()
       });
@@ -1178,7 +1239,7 @@
     }
 
     try {
-      const res = await fetch("/api/admin/players/" + encodeURIComponent(currentTicket) + "/role", {
+      const res = await fetch(API_BASE + "/api/admin/players/" + encodeURIComponent(currentTicket) + "/role", {
         method: "POST",
         headers: apiHeaders(true),
         body: JSON.stringify({ role: nextRole })
@@ -1191,6 +1252,41 @@
       refreshChatList();
     } catch (err) {
       console.warn("No se pudo cambiar el rol:", err);
+    }
+  }
+
+  async function updateNationality(){
+    if (!currentTicket) return;
+    const select = document.getElementById("nationality-select");
+    const nationality = select.value;
+
+    if (isTestTicket(currentTicket)){
+      const p = testPlayers[currentTicket];
+      if (p){
+        p.nationality = nationality || null;
+        p.updatedAt = new Date().toISOString();
+        mergeTestPlayersIntoList();
+        renderChatList();
+      }
+      return;
+    }
+
+    select.disabled = true;
+    try {
+      const res = await fetch(API_BASE + "/api/admin/players/" + encodeURIComponent(currentTicket) + "/nationality", {
+        method: "POST",
+        headers: apiHeaders(true),
+        body: JSON.stringify({ nationality })
+      });
+      if (!res.ok){
+        alert(T("alert_role_error"));
+      }
+      loadConversation();
+      refreshChatList();
+    } catch (err) {
+      console.warn("No se pudo actualizar la nacionalidad:", err);
+    } finally {
+      select.disabled = false;
     }
   }
 

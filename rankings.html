@@ -1435,6 +1435,13 @@
   </div>
 
 <script>
+  /* ============ URL DEL BACKEND (Render) ============ */
+  // Reemplazá esto por la URL real que te da Render cuando desplegás
+  // minehost-stats-api.js. Ejemplo: "https://assipxa-api.onrender.com"
+  // Sin esto, los fetch a /api/... no van a encontrar el backend porque
+  // este HTML vive en un dominio distinto (nuu14.com).
+  const API_BASE = "https://TU-APP.onrender.com";
+
   /* ============ PARTICULAS FLOTANTES SOBRE EL FONDO ============ */
   (function spawnParticles(){
     const wrap = document.getElementById('bg-particles');
@@ -1770,7 +1777,7 @@
   /* ============ REGISTER GATE ============ */
 
   // Reemplazá esto por tu backend real (o un webhook) que reciba el JSON y lo guarde/valide.
-  const REGISTER_ENDPOINT = "/api/register";
+  const REGISTER_ENDPOINT = API_BASE + "/api/register";
 
   const GATE_STORAGE_KEY = "nexus_gate_steamid"; // solo guardamos el SteamID64, nunca la contraseña
   const GATE_TICKET_KEY = "nexus_gate_ticket";
@@ -1869,6 +1876,7 @@
 
   const ADMIN_AUTH_CODE = "9912938414112";
   const ADMIN_STORAGE_KEY = "nexus_admin_identity";
+  const STAFF_STEAMID_KEY = "nexus_staff_steamid"; // guarda el SteamID64 si el jugador tiene rol STAFF/ADMIN
 
   function openAdminGate(){
     document.getElementById("gate-overlay").classList.remove("is-hidden");
@@ -1917,7 +1925,7 @@
 
   // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
   // { name, avatarUrl, nationality, verified, kills, deaths, kd }
-  const PROFILE_ENDPOINT = "/api/profile";
+  const PROFILE_ENDPOINT = API_BASE + "/api/profile";
 
   let currentProfileData = null;
   let currentProfileLang = currentLang;
@@ -1984,8 +1992,8 @@
       renderProfile(data);
       try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data)); } catch (err) {}
     } catch (err) {
-      if (attempt < 4){
-        setTimeout(() => loadProfileData(steamId64, attempt + 1), attempt * 900);
+      if (attempt < 10){
+        setTimeout(() => loadProfileData(steamId64, attempt + 1), Math.min(attempt * 1500, 8000));
       } else {
         // Se quedó con el placeholder / último dato cacheado (ver showProfileChip),
         // pero avisamos fuerte en consola porque esto es lo que hace que el
@@ -2015,6 +2023,17 @@
     } else {
       roleTile.style.display = "none";
     }
+
+    // Si el backend dice que este jugador tiene rol STAFF o ADMIN,
+    // le habilitamos el Menú Admin automáticamente (sin código maestro).
+    // OJO: esto tiene que estar igual en TODAS las páginas (index, rankings,
+    // rules, server-eu, server-sa) o el Menú Admin "se pierde" al navegar.
+    if ((data.role === "STAFF" || data.role === "ADMIN") && data.steamId64){
+      try { localStorage.setItem(STAFF_STEAMID_KEY, data.steamId64); } catch (err) {}
+    } else if (data.steamId64) {
+      try { localStorage.removeItem(STAFF_STEAMID_KEY); } catch (err) {}
+    }
+    updateAdminBtnVisibility();
 
     document.getElementById("profile-nat-label").textContent = dict.nationality;
     document.getElementById("profile-kills-label").textContent = dict.kills;

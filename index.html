@@ -1723,6 +1723,13 @@
   </div>
 
 <script>
+  /* ============ URL DEL BACKEND (Render) ============ */
+  // Reemplazá esto por la URL real que te da Render cuando desplegás
+  // minehost-stats-api.js. Ejemplo: "https://assipxa-api.onrender.com"
+  // Sin esto, los fetch a /api/... no van a encontrar el backend porque
+  // este HTML vive en un dominio distinto (nuu14.com).
+  const API_BASE = "https://TU-APP.onrender.com";
+
   /* ============ PARTICULAS FLOTANTES SOBRE EL FONDO ============ */
   (function spawnParticles(){
     const wrap = document.getElementById('bg-particles');
@@ -1750,7 +1757,7 @@
   // Reemplazá esto por tu backend real (o un webhook) que reciba el JSON y lo guarde/valide.
   // Ese backend es el que debe pedirle el número de ticket al bot de Discord
   // (GET /api/ticket/new en nexus-bot.js) y devolverlo en la respuesta como { ticket: "123456" }.
-  const REGISTER_ENDPOINT = "/api/register";
+  const REGISTER_ENDPOINT = API_BASE + "/api/register";
 
   const GATE_STORAGE_KEY = "nexus_gate_steamid"; // solo guardamos el SteamID64, nunca la contraseña
   const GATE_TICKET_KEY = "nexus_gate_ticket"; // guardamos el número de ticket para poder mostrarlo de nuevo
@@ -1882,7 +1889,7 @@
     try { ticket = localStorage.getItem(GATE_TICKET_KEY); } catch (err) {}
     if (!ticket) return;
     try {
-      const res = await fetch("/api/chat/" + encodeURIComponent(ticket) + "/messages");
+      const res = await fetch(API_BASE + "/api/chat/" + encodeURIComponent(ticket) + "/messages");
       if (!res.ok) return;
       const data = await res.json();
       renderPendingChatMessages(data.messages);
@@ -1902,7 +1909,7 @@
     if (!ticket) return false;
     input.value = "";
     try {
-      await fetch("/api/chat/" + encodeURIComponent(ticket) + "/messages", {
+      await fetch(API_BASE + "/api/chat/" + encodeURIComponent(ticket) + "/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, steamId64 })
@@ -1966,7 +1973,7 @@
     try { ticket = localStorage.getItem(GATE_TICKET_KEY); } catch (err) {}
     if (!ticket) return;
     try {
-      const res = await fetch("/api/chat/" + encodeURIComponent(ticket) + "/messages");
+      const res = await fetch(API_BASE + "/api/chat/" + encodeURIComponent(ticket) + "/messages");
       if (!res.ok) return;
       const data = await res.json();
       renderSupportChatMessages(data.messages);
@@ -1986,7 +1993,7 @@
     if (!ticket) return false;
     input.value = "";
     try {
-      await fetch("/api/chat/" + encodeURIComponent(ticket) + "/messages", {
+      await fetch(API_BASE + "/api/chat/" + encodeURIComponent(ticket) + "/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, steamId64 })
@@ -2037,7 +2044,7 @@
     const headers = adminApiHeaders();
     if (!headers) return;
     try {
-      const res = await fetch("/api/admin/players", { headers });
+      const res = await fetch(API_BASE + "/api/admin/players", { headers });
       if (!res.ok) return;
       const data = await res.json();
       const pending = (data.players || []).filter(p => !p.verified).length;
@@ -2118,7 +2125,7 @@
 
   // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
   // { name, avatarUrl, nationality, verified, kills, deaths, kd }
-  const PROFILE_ENDPOINT = "/api/profile";
+  const PROFILE_ENDPOINT = API_BASE + "/api/profile";
 
   const PROFILE_STORAGE_KEY = "nexus_gate_profile"; // cache local de los datos de perfil ya cargados
 
@@ -2180,8 +2187,8 @@
       renderProfile(data);
       try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data)); } catch (err) {}
     } catch (err) {
-      if (attempt < 4){
-        setTimeout(() => loadProfileData(steamId64, attempt + 1), attempt * 900);
+      if (attempt < 10){
+        setTimeout(() => loadProfileData(steamId64, attempt + 1), Math.min(attempt * 1500, 8000));
       } else {
         // Se quedó con el placeholder / último dato cacheado (ver showProfileChip),
         // pero avisamos fuerte en consola porque esto es lo que hace que el

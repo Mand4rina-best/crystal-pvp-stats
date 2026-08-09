@@ -227,6 +227,50 @@
     font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-low); letter-spacing:0.5px;
   }
 
+  /* ---------- connect + mapa (IP para conectarse y rotación) ---------- */
+
+  .info-row{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 760px){ .info-row{ grid-template-columns: 1fr; } }
+
+  .info-card{
+    background: var(--bg-panel); border:1px solid var(--line); border-radius:12px;
+    padding: 18px 20px;
+  }
+  .info-card-title{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:1.5px;
+    text-transform:uppercase; color: var(--text-low); margin-bottom: 12px;
+  }
+
+  .ip-row{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .ip-value{
+    font-family:'JetBrains Mono', monospace; font-size:16px; font-weight:600; color: var(--text-hi);
+    background: var(--bg-panel-2); border:1px solid var(--line); border-radius:8px;
+    padding: 9px 14px; flex: 1 1 auto; min-width: 160px;
+  }
+  .ip-copy-btn{
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:600;
+    color: var(--cyan); border:1px solid rgba(2,193,252,0.35); background: rgba(2,193,252,0.08);
+    padding: 10px 16px; border-radius:8px; cursor:pointer; white-space:nowrap;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .ip-copy-btn:hover{ background: rgba(2,193,252,0.16); }
+  .ip-copy-btn.is-copied{ color: var(--green); border-color: rgba(61,220,132,0.35); background: rgba(61,220,132,0.1); }
+
+  .map-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .map-item{ display:flex; align-items:center; gap:10px; }
+  .map-thumb{
+    width:44px; height:44px; border-radius:8px; flex:0 0 auto;
+    background: linear-gradient(150deg, var(--blue), var(--cyan));
+  }
+  .map-text-label{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--text-low); letter-spacing:0.5px; text-transform:uppercase; }
+  .map-text-name{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:15px; color:var(--text-hi); }
+  .map-arrow{ color: var(--text-low); font-size:16px; }
+
   /* ---------- table ---------- */
 
   .board{ background:var(--bg-panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
@@ -535,6 +579,36 @@
       </div>
     </div>
 
+    <div class="info-row">
+      <div class="info-card">
+        <div class="info-card-title" id="connect-label">CONECTARSE</div>
+        <div class="ip-row">
+          <div class="ip-value" id="server-ip">45.235.98.186:9700</div>
+          <button class="ip-copy-btn" id="copy-ip-btn" type="button" onclick="copyServerIp()">📋 Copiar IP</button>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title" id="map-rotation-label">ROTACIÓN DE MAPA</div>
+        <div class="map-row">
+          <div class="map-item">
+            <div class="map-thumb"></div>
+            <div>
+              <div class="map-text-label" id="current-map-label">Mapa Actual</div>
+              <div class="map-text-name" id="current-map-name">Site-19</div>
+            </div>
+          </div>
+          <div class="map-arrow">→</div>
+          <div class="map-item">
+            <div class="map-thumb" style="opacity:.55;"></div>
+            <div>
+              <div class="map-text-label" id="next-map-label">Próximo Mapa</div>
+              <div class="map-text-name" id="next-map-name">Gate B</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="board">
       <div class="board-head">
         <div class="board-title">Round Leaderboard</div>
@@ -553,13 +627,18 @@
         </thead>
         <tbody id="board-body"></tbody>
       </table>
-
-      <div class="board-foot">IP SERVER: <span class="mono" style="color:var(--cyan);">45.235.98.186:9700</span></div>
     </div>
 
   </div>
 
 <script>
+  /* ============ URL DEL BACKEND (Render) ============ */
+  // Reemplazá esto por la URL real que te da Render cuando desplegás
+  // minehost-stats-api.js. Ejemplo: "https://assipxa-api.onrender.com"
+  // Sin esto, los fetch a /api/... no van a encontrar el backend porque
+  // este HTML vive en un dominio distinto (nuu14.com).
+  const API_BASE = "https://TU-APP.onrender.com";
+
   /* ============ PARTICULAS FLOTANTES SOBRE EL FONDO ============ */
   (function spawnParticles(){
     const wrap = document.getElementById('bg-particles');
@@ -628,6 +707,62 @@
   };
   const LANG_CODE = { en:"EN", es:"ES", pt:"PT-BR", pl:"PL" };
 
+  const SERVER_INFO_I18N = {
+    en: { connect: "CONNECT", copy: "📋 Copy IP", copied: "✓ Copied!", rotation: "MAP ROTATION", current: "Current Map", next: "Next Map" },
+    es: { connect: "CONECTARSE", copy: "📋 Copiar IP", copied: "✓ ¡Copiado!", rotation: "ROTACIÓN DE MAPA", current: "Mapa Actual", next: "Próximo Mapa" },
+    pt: { connect: "CONECTAR", copy: "📋 Copiar IP", copied: "✓ Copiado!", rotation: "ROTAÇÃO DE MAPA", current: "Mapa Atual", next: "Próximo Mapa" },
+    pl: { connect: "POŁĄCZ", copy: "📋 Kopiuj IP", copied: "✓ Skopiowano!", rotation: "ROTACJA MAPY", current: "Obecna Mapa", next: "Następna Mapa" }
+  };
+
+  function applyServerInfoLang(lang){
+    const dict = SERVER_INFO_I18N[lang] || SERVER_INFO_I18N.en;
+    const connectLabel = document.getElementById("connect-label");
+    const rotationLabel = document.getElementById("map-rotation-label");
+    const currentLabel = document.getElementById("current-map-label");
+    const nextLabel = document.getElementById("next-map-label");
+    const copyBtn = document.getElementById("copy-ip-btn");
+    if (connectLabel) connectLabel.textContent = dict.connect;
+    if (rotationLabel) rotationLabel.textContent = dict.rotation;
+    if (currentLabel) currentLabel.textContent = dict.current;
+    if (nextLabel) nextLabel.textContent = dict.next;
+    if (copyBtn && !copyBtn.classList.contains("is-copied")) copyBtn.textContent = dict.copy;
+  }
+
+  function copyServerIp(){
+    const ip = document.getElementById("server-ip").textContent.trim();
+    const btn = document.getElementById("copy-ip-btn");
+    const dict = SERVER_INFO_I18N[currentProfileLang] || SERVER_INFO_I18N.en;
+
+    const markCopied = () => {
+      btn.textContent = dict.copied;
+      btn.classList.add("is-copied");
+      setTimeout(() => {
+        btn.textContent = dict.copy;
+        btn.classList.remove("is-copied");
+      }, 1800);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(ip).then(markCopied).catch(() => fallbackCopy(ip, markCopied));
+    } else {
+      fallbackCopy(ip, markCopied);
+    }
+  }
+
+  function fallbackCopy(text, onDone){
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      onDone();
+    } catch (err) {}
+  }
+
   function setLang(lang){
     const label = document.getElementById("menu-back-label");
     if (label) label.textContent = BACK_LABEL[lang] || BACK_LABEL.en;
@@ -640,6 +775,7 @@
 
     currentProfileLang = lang;
     if (currentProfileData) renderProfile(currentProfileData);
+    applyServerInfoLang(lang);
   }
 
   function toggleLangMenu(){
@@ -658,11 +794,12 @@
 
   const GATE_STORAGE_KEY = "nexus_gate_steamid";
   const ADMIN_STORAGE_KEY = "nexus_admin_identity";
+  const STAFF_STEAMID_KEY = "nexus_staff_steamid"; // guarda el SteamID64 si el jugador tiene rol STAFF/ADMIN
   const PROFILE_STORAGE_KEY = "nexus_gate_profile";
 
   // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
   // { name, avatarUrl, nationality, verified, kills, deaths, kd }
-  const PROFILE_ENDPOINT = "/api/profile";
+  const PROFILE_ENDPOINT = API_BASE + "/api/profile";
 
   let currentProfileData = null;
   let currentProfileLang = "en";
@@ -728,8 +865,8 @@
       renderProfile(data);
       try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data)); } catch (err) {}
     } catch (err) {
-      if (attempt < 4){
-        setTimeout(() => loadProfileData(steamId64, attempt + 1), attempt * 900);
+      if (attempt < 10){
+        setTimeout(() => loadProfileData(steamId64, attempt + 1), Math.min(attempt * 1500, 8000));
       } else {
         // Se quedó con el placeholder / último dato cacheado (ver showProfileChip),
         // pero avisamos fuerte en consola porque esto es lo que hace que el
@@ -751,6 +888,14 @@
     document.getElementById("profile-kills").textContent = (data.kills ?? "—");
     document.getElementById("profile-deaths").textContent = (data.deaths ?? "—");
     document.getElementById("profile-kd").textContent = (data.kd ?? "—");
+
+    // Si el backend dice que este jugador tiene rol STAFF o ADMIN,
+    // le habilitamos el Menú Admin automáticamente (sin código maestro).
+    if ((data.role === "STAFF" || data.role === "ADMIN") && data.steamId64){
+      try { localStorage.setItem(STAFF_STEAMID_KEY, data.steamId64); } catch (err) {}
+    } else if (data.steamId64) {
+      try { localStorage.removeItem(STAFF_STEAMID_KEY); } catch (err) {}
+    }
 
     document.getElementById("profile-nat-label").textContent = dict.nationality;
     document.getElementById("profile-kills-label").textContent = dict.kills;

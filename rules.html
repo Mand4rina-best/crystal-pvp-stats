@@ -880,6 +880,7 @@
 
   const GATE_STORAGE_KEY = "nexus_gate_steamid";
   const ADMIN_STORAGE_KEY = "nexus_admin_identity";
+  const STAFF_STEAMID_KEY = "nexus_staff_steamid"; // guarda el SteamID64 si el jugador tiene rol STAFF/ADMIN
   const PROFILE_STORAGE_KEY = "nexus_gate_profile";
 
   // Reemplazá esto por tu backend real, que reciba el SteamID64 y devuelva
@@ -950,8 +951,8 @@
       renderProfile(data);
       try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(data)); } catch (err) {}
     } catch (err) {
-      if (attempt < 4){
-        setTimeout(() => loadProfileData(steamId64, attempt + 1), attempt * 900);
+      if (attempt < 10){
+        setTimeout(() => loadProfileData(steamId64, attempt + 1), Math.min(attempt * 1500, 8000));
       } else {
         // Se quedó con el placeholder / último dato cacheado (ver showProfileChip),
         // pero avisamos fuerte en consola porque esto es lo que hace que el
@@ -973,6 +974,14 @@
     document.getElementById("profile-kills").textContent = (data.kills ?? "—");
     document.getElementById("profile-deaths").textContent = (data.deaths ?? "—");
     document.getElementById("profile-kd").textContent = (data.kd ?? "—");
+
+    // Si el backend dice que este jugador tiene rol STAFF o ADMIN,
+    // le habilitamos el Menú Admin automáticamente (sin código maestro).
+    if ((data.role === "STAFF" || data.role === "ADMIN") && data.steamId64){
+      try { localStorage.setItem(STAFF_STEAMID_KEY, data.steamId64); } catch (err) {}
+    } else if (data.steamId64) {
+      try { localStorage.removeItem(STAFF_STEAMID_KEY); } catch (err) {}
+    }
 
     document.getElementById("profile-nat-label").textContent = dict.nationality;
     document.getElementById("profile-kills-label").textContent = dict.kills;
